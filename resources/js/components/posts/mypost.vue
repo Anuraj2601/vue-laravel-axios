@@ -2,13 +2,37 @@
         <div class="title text-center mb-6">
             <h2 class="text-2xl font-semibold">My Posts</h2>
         </div>
-            <div class="title flex justify-between items-center mb-6">
-                <button @click="open = true" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center space-x-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    <span>Add Post</span>
+        <div class="tabs-container mb-6 ml-16">
+            <div class="flex space-x-4">
+                <button 
+                    v-for="(social, index) in socialMediaTypes" 
+                    :key="index"
+                    :class="{
+                        'bg-blue-100 text-blue-600 rounded-full py-2 px-6 ': selectedTab === social.id,
+                        'text-gray-600 hover:text-blue-100 hover:bg-blue-600 rounded-full py-2 px-6 border-2 border-transparent': selectedTab !== social.id
+                    }"
+                    class="text-sm font-semibold focus:outline-none transition-all duration-300"
+                    @click="selectTab(social.id,social.platform)"
+                    >
+                    {{ social.platform }}
                 </button>
+            </div>
+        </div>
+
+
+
+
+            <div class="title flex justify-between items-center mb-6">
+                <div class="flex justify-between">
+                <button
+                    class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 flex items-center space-x-2"
+                    @click="editPost(selectedTab,selectedPlatform)">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 inline-block mr-2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                        </svg>
+                        Manage Posts
+                </button>
+                </div>
 
                 <div class="mb-4 flex-1 ml-4 text-right">
                     <input 
@@ -42,16 +66,17 @@
                                 </div>
                             </div>
 
-                            <div class="mt-4 flex space-x-2">
-                                <button 
-                                    class="bg-yellow-500 text-white p-2 rounded-md hover:bg-yellow-400 text-sm w-full"
-                                    @click="openDrawer(post.id)">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 inline-block mr-2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                                    </svg>
-                                    Edit
-                                </button>
+                            <div class="mt-4">
+                                <div class="mt-2 flex flex-wrap gap-1">
+                                    <span class="inline-flex items-center space-x-1">
+                                        <span v-for="(socialMed, idx) in post.social_media" :key="idx" class="bg-pink-100 text-pink-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                                            {{ socialMed.platform }}
+                                        </span>
+                                    </span>
+                                </div>
+                            </div>
 
+                            <div class="mt-4 flex space-x-2">
                                 <button 
                                     class="bg-red-500 text-white p-2 rounded-md hover:bg-red-400 text-sm w-full"
                                     @click="confirmDelete(post.id)">
@@ -64,7 +89,7 @@
                         </div>
                         <div v-else class="text-center p-4">Loading posts...</div>
                     </div>
-                </div>
+            </div>
 
         <div class="mt-6">
         <nav aria-label="Page navigation example">
@@ -116,7 +141,7 @@
 
       </WarningModal>
 
-      <TransitionRoot as="template" :show="open">
+        <TransitionRoot as="template" :show="edit">
             <Dialog class="relative z-10">
             <TransitionChild
                 as="template"
@@ -147,7 +172,7 @@
                     class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 w-full sm:max-w-lg"
                     >
                     
-                    <Add @close="closeModal" @created="fetchPosts" />
+                    <Edit :socialMediaId="selectedSocialMediaId" :platformName="selectedSocialMediaName" @close="closeEdit" @updated="fetchPosts" />
                     
                     </DialogPanel>
                 </TransitionChild>
@@ -156,43 +181,55 @@
             </Dialog>
         </TransitionRoot>
 
-        <EditDrawer :show="showDrawer" :postId="selectedPostId" @close="showDrawer=false" @updated="fetchPosts" />
+        <!-- <EditDrawer :show="showDrawer" :postId="selectedPostId" @close="showDrawer=false" @updated="fetchPosts" /> -->
 </template>
 
 <script setup>
 import { onMounted, ref } from "vue";
 import axios from "axios";
-import { useRouter } from "vue-router";
-import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from "@headlessui/vue";
-import Add from "./add.vue";
+import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from "@headlessui/vue";
 import WarningModal from "../modals/WarningModal.vue";
-import EditDrawer from "./EditDrawer.vue";
+import Edit from "./edit.vue";
 
 const posts = ref([]);
 const currentPage = ref(1);
 const searchQuery = ref('');
 const totalPages = ref(1);
 const totalPosts = ref(0);
-const router = useRouter();
 const open = ref(false);
+const edit = ref(false);
 const loading = ref(false);
 const showWarning = ref(false);
 const postToDelete = ref(null);
-const showDrawer = ref(false);
-const selectedPostId = ref(null);
+const selectedSocialMediaId = ref(null);
+const selectedSocialMediaName = ref(null);
+const socialMediaTypes = ref([]);
+const selectedTab = ref(1);
+const selectedPlatform = ref("Facebook");
 
 function openModal() {
   open.value = true
 }
 
 function closeModal() {
-  open.value = false
+  open.value = false;
 }
 
-function openDrawer(id) {
-    selectedPostId.value = id;
-    showDrawer.value = true;
+function closeEdit() {
+    edit.value = false;
 }
+
+function editPost(id,name) {
+    selectedSocialMediaId.value = id;
+    selectedSocialMediaName.value = name;
+    edit.value = true;
+}
+
+const selectTab = (platformId,platform) => {
+    selectedTab.value = platformId;
+    selectedPlatform.value = platform;
+    fetchPosts();
+};
 
 const token = localStorage.getItem('auth_token');
 const userRole = localStorage.getItem('user_role');
@@ -203,10 +240,23 @@ const axiosInstance = axios.create({
     }
 });
 
+const fetchSocialMedia = async () => {
+    try {
+         const response = await axios.get('api/posts/create', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        socialMediaTypes.value = response.data.socialMedia;
+    } catch (error) {
+        console.error('Unable to fetch Social media', error);
+    }
+}
+
 const fetchPosts = async () => {
     try {
         loading.value = true;
-        const response = await axiosInstance.get(`/api/posts?page=${currentPage.value}&search=${searchQuery.value}`);
+        const response = await axiosInstance.get(`/api/posts?page=${currentPage.value}&search=${searchQuery.value}&socialMediaType=${selectedTab.value}`);
         posts.value = response.data.posts;
         
         totalPosts.value = response.data.total;
@@ -226,14 +276,6 @@ const changePage = (page) => {
     }
 }
 
-/* const editPost = (postId) => {
-    try {
-        router.push(`/edit-post/${postId}`);
-    } catch (error) {
-        console.error('edit post redirect error');
-    }
-} */
-
 function confirmDelete(id) {
     postToDelete.value = id;
     showWarning.value = true;
@@ -252,15 +294,11 @@ const deletePost = async () => {
     }
 }
 
-/* const addPost = () => {
-    try {
-        router.push('/add-post');
-    } catch (error) {
-        console.log('add post redirect error', error);
-    }
-} */
+onMounted(async () => {
+  await fetchSocialMedia();
+  fetchPosts();
+});
 
-onMounted(fetchPosts);
 </script>
 
 <style scoped>

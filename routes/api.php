@@ -44,5 +44,7 @@ Route::middleware(['auth:sanctum'])->group(function() {
     Route::post('/profile/update', [UserController::class, 'profileUpdate'])->name('profile.update');
     Route::get('/profile/{id}', [UserController::class, 'show'])->name('profile.show');
     Route::get('/list', [UserController::class, 'getCount'])->name('profile.list');
+    Route::get('/posts/socmed/{id}', [PostController::class, 'postbySoc'])->name('posts.soc');
+    Route::post('posts/update-all', [PostController::class, 'updateAll'])->name('posts.updates');
 });
 

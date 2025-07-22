@@ -6,11 +6,10 @@ import Multiselect from 'vue-multiselect';
 import SuccessModal from '../modals/SuccessModal.vue';
 
 const tags = ref([]);
+const socialMedia = ref([]);
 
 const router = useRouter();
 const route  = useRoute();
-
-
 
 const token = localStorage.getItem('auth_token');
 const userRole = localStorage.getItem('user_role');
@@ -26,8 +25,18 @@ const showModal = (title, message) => {
   modalRef.value?.show();
 };
 
-const emit = defineEmits(['close'])
 
+const emit = defineEmits(['close', 'created', 'update:forms', 'remove']);
+
+const props = defineProps({
+    forms: {
+        type: Array,
+        required: true
+    },
+    errors: {
+        type: Array,
+    }
+});
 const closeForm = async () => {
   if (success) {
     emit('close')
@@ -42,9 +51,7 @@ const alert = ref({
     visible: false,
     message: '',
     type: 'alert-success'
-})
- 
-const errors = ref({});
+});
 
 const fetchTags = async () => {
     const response = await axios.get('api/posts/create', {
@@ -53,23 +60,11 @@ const fetchTags = async () => {
         }
     });
     tags.value = response.data.tags;
+    socialMedia.value = response.data.socialMedia;
 }
 
-const forms = ref([
-    {
-        name: '',
-        description: '',
-        tags: []
-    }
-]);
 
-function addForm() {
-    forms.value.push({
-        name: '',
-        description: '',
-        tags: []
-    })
-}
+
 
 function showSuccessModal() {
     showSuccess.value = true;
@@ -84,31 +79,8 @@ function removeForm(index) {
     forms.value.splice(index, 1);
 }
 
-const submitForm = async () => {
-        errors.value = {};
-    try {
-        const response = await axios.post('api/posts/store', {
-        forms: forms.value
-        }, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        })
-
-        if(response.data.status == 'success') {
-            showSuccessModal();
-        }
-    } catch (error) {
-        if(error.response) {
-            if (error.response && error.response.status === 422) {
-            
-            errors.value = error.response.data.error; 
-
-
-            console.error('Validation errors:', errors.value);
-            }
-        }
-    }
+const handleRemove = (index) => {
+    emit('remove', index);
 }
 
 onMounted(fetchTags);
@@ -133,19 +105,8 @@ onMounted(fetchTags);
 
         </SuccessModal>
 
-        <div class="bg-white shadow-lg rounded-lg p-6">
-             <div class="flex justify-between">
-                <h2 class="text-2xl font-semibold">Create Posts</h2>
-                <button type="button" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 sm:mt-0 sm:w-auto" @click="cancel" ref="cancelButtonRef">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                    </svg>
-                </button>
-             </div>
-             <button type="button" @click="addForm" class="btn btn-primary mb-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none text-sm">Add New Post</button>
-
-            <form @submit.prevent="submitForm">
-                <div v-for="(form, index) in forms" :key="index" class="space-y-6">
+        <div class="rounded-lg">
+                <div v-for="(form, index) in props.forms" :key="index" class="space-y-6">
                     
                     <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
                         <div class="w-full md:w-1/2">
@@ -157,8 +118,8 @@ onMounted(fetchTags);
                                 class="mt-2 p-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" 
                                 placeholder="Tech Enthusiast Blog" 
                             />
-                            <div v-if="errors['forms.' + index + '.name']" class="text-red-500 text-sm mt-2">
-                                {{ errors['forms.' + index + '.name'] }}
+                            <div v-if="props.errors?.[index]?.name" class="text-red-500 text-sm mt-2">
+                                {{ props.errors[index].name }}
                             </div>
                         </div>
 
@@ -171,8 +132,8 @@ onMounted(fetchTags);
                                 class="mt-2 p-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" 
                                 placeholder="Sharing my thoughts on the latest tech trends"
                             />
-                            <div v-if="errors['forms.' + index + '.description']" class="text-red-500 text-sm mt-2">
-                                {{ errors['forms.' + index + '.description'] }}
+                            <div v-if="props.errors?.[index]?.description" class="text-red-500 text-sm mt-2">
+                                {{ props.errors[index].description }}
                             </div>
                         </div>
                     </div>
@@ -191,7 +152,7 @@ onMounted(fetchTags);
                             
                             label="name"
                             track-by="id"
-                            :preselect-first="true"
+                            :preselect-first="false"
                             class="mt-2"
                         >
                             <template #tag="{ option, remove }">
@@ -204,21 +165,49 @@ onMounted(fetchTags);
                                 <div class="multiselect__clear" v-if="form.tags.length" @mousedown.prevent.stop="clearAll(props.search)"></div>
                             </template>
                         </Multiselect>
-                        <div v-if="errors['forms.' + index + '.tags']" class="text-red-500 text-sm mt-2">
-                            {{ errors['forms.' + index + '.tags'] }}
+                        <div v-if="props.errors?.[index]?.tags" class="text-red-500 text-sm mt-2">
+                            {{ props.errors[index].tags }}
+                        </div>
+                    </div>
+
+                    <div class="">
+                        <label for="socialMedia" class="block text-lg font-medium text-gray-700 text-left">Social Media<span class="text-red-400 text-base font-medium">*</span></label>
+                        <Multiselect
+                            id="multiselect"
+                            v-model="form.socialMedia"
+                            :options="socialMedia"
+                            :multiple="true"
+                            :close-on-select="true"
+                            :clear-on-select="false"
+                            :preserve-search="true"
+                            :hide-selected="true"
+                            
+                            label="platform"
+                            track-by="id"
+                            :preselect-first="false"
+                            class="mt-2"
+                        >
+                            <template #tag="{ option, remove }">
+                                <span class="bg-green-100 text-green-800 px-2.5 py-0.5 rounded-full mr-2">
+                                    {{ option.platform }}
+                                    <span class="ml-2 text-red-500 cursor-pointer" @click="remove(option)">❌</span>
+                                </span>
+                            </template>
+                            <template #clear="props">
+                                <div class="multiselect__clear" v-if="form.socialMedia.length" @mousedown.prevent.stop="clearAll(props.search)"></div>
+                            </template>
+                        </Multiselect>
+                        <div v-if="props.errors?.[index]?.socialMedia" class="text-red-500 text-sm mt-2">
+                            {{ props.errors[index].socialMedia }}
                         </div>
                     </div>
 
                     <div class="w-full mt-4 text-left">
-                        <button type="button" @click="removeForm(index)" class="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 focus:outline-none text-sm">Remove</button>
+                        <button type="button" @click="handleRemove(index)" class="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 focus:outline-none text-sm">Remove</button>
                     </div>
 
                 </div>
 
-                <div class="mt-6 text-right">
-                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none text-sm">Submit</button>
-                </div>
-            </form>
         </div>
     </div>
 </template>
