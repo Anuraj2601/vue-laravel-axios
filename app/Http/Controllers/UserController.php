@@ -243,4 +243,20 @@ class UserController extends Controller
             'mypost_count' => $mypostCount
         ]);
      }
+
+    /**
+    * fetch a user with roles & permissions
+    * @param \Illuminate\Http\Request $request
+    * @return \Illuminate\Http\JsonResponse
+    */
+
+     public function fetchUser(Request $request) {
+        $user = request()->user();
+
+        return response()->json([
+            'user' => $user,
+            'roles'=> $user->getRoleNames(),
+            'permissions'=> $user->getAllPermissions()->pluck('name')
+        ]);
+     }
 }

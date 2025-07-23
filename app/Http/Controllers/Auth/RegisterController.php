@@ -86,9 +86,12 @@ class RegisterController extends Controller
                 return response()->json([
                     'msg'   => 'User Login Successfully',
                     'user' => $user->roles->pluck('name'),
+                    'roles'=> $user->getRoleNames(),
+                    'permissions'=> $user->getAllPermissions()->pluck('name'),
                     'id'   => $user->id,
                     'name' => $user->name,
                     'token' => $token,
+                    'usr'   => $user,
                     'status'    => 'success'
                 ]);
             }

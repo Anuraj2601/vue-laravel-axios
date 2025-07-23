@@ -262,7 +262,6 @@ const selectTab = (platformId,platform) => {
 };
 
 const token = localStorage.getItem('auth_token');
-const userRole = localStorage.getItem('user_role');
 
 const axiosInstance = axios.create({
   headers: {

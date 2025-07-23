@@ -12,7 +12,6 @@ const router = useRouter();
 const route  = useRoute();
 
 const token = localStorage.getItem('auth_token');
-const userRole = localStorage.getItem('user_role');
 const showSuccess = ref(false);
 
 const modalTitle = ref('');

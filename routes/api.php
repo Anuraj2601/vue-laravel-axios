@@ -34,6 +34,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 });
 
 Route::middleware(['auth:sanctum'])->group(function() {
+    ROute::get('/fetchUser', [UserController::class, 'fetchUser'])->name('user.fetch');
     Route::get('/posts/create', [PostController::class, 'create'])->middleware(['permission:create_post'])->name('post.create');
     Route::post('/posts/store', [PostController::class, 'store'])->middleware(['permission:create_post'])->name('post.store');
     Route::get('/posts/edit/{id}', [PostController::class, 'edit'])->middleware(['permission:edit_post'])->name('post.edit');

@@ -239,7 +239,6 @@ const selectTab = (platformId,platform) => {
 };
 
 const token = localStorage.getItem('auth_token');
-const userRole = localStorage.getItem('user_role');
 
 const axiosInstance = axios.create({
     headers: {
@@ -270,7 +269,6 @@ const fetchPosts = async () => {
         totalPages.value = response.data.last_page;
         loading.value = false;
         console.log(response);
-        console.log(userRole);
     } catch (error) {
         console.error('Fetching posts details error', error);
     }

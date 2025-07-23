@@ -69,6 +69,7 @@
     import axios from 'axios';
     import { useRouter } from 'vue-router';
     import Modal from './modals/Modal.vue';
+    import store from '../store';
 
     const email = ref('');
     const password = ref('');
@@ -98,10 +99,13 @@
                 password: password.value
             });
             if(response.data.status == 'success') {
-                localStorage.setItem('auth_token', response.data.token);
-                localStorage.setItem('user_role', response.data.user[0]);
+                /* localStorage.setItem('auth_token', response.data.token); */
                 localStorage.setItem('user_name', response.data.name);
                 localStorage.setItem('user_id', response.data.id);
+                store.commit('auth/SET_TOKEN', response.data.token);
+                store.commit('auth/SET_ROLES', response.data.roles);
+                store.commit('auth/SET_PERMISSIONS', response.data.permissions);
+                store.commit('auth/SET_USER', response.data.usr);
                 router.push('/dashboard');
             }
             console.log(response.data);
@@ -110,7 +114,7 @@
                 if(error.response.status === 422) {
                     const backendErrors = error.response.data.error;
                     for (const field in backendErrors) {
-                        errors.value[field] = backendErrors[field]; // Assigning error message for each field
+                        errors.value[field] = backendErrors[field];
                     }
                 } else if (error.response.status === 401) {
                     errorl.value = error.response.data.msg;
