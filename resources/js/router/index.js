@@ -14,6 +14,12 @@ import store from '../store';
 const routes = [
   {
     path: '/',
+    redirect: to => {
+      if (!store.getters['auth/isAuthenticated']) {
+        return '/login';
+      }
+      return '/dashboard';
+    },
     component: Layout, 
     children: [
       {

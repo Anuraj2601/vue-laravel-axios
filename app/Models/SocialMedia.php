@@ -9,12 +9,16 @@ class SocialMedia extends Model
 {
     use HasFactory;
 
+    protected $table = 'social_media';
+
     protected $fillable = [
         'platform',
         'url',
+        'location',
+        'data'
     ];
 
     public function posts() {
-       return $this->belongsToMany(Post::class, 'post_social_media');
+       return $this->hasMany(Post::class, 'social_media_id');
     }
 }

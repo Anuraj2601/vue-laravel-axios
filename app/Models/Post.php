@@ -12,18 +12,21 @@ class Post extends Model
     protected $fillable = [
         'name',
         'description',
-        'user_id'
+        'user_id',
+        'social_media_id'
     ];
 
     public function user() {
         return $this->belongsTo(User::class);
     }
 
+    public function socialMedia() {
+        return $this->belongsTo(SocialMedia::class,'social_media_id');
+    }
+
     public function tags() {
         return $this->belongsToMany(Tag::class, 'post_tag');
     }
 
-    public function socialMedia() {
-        return $this->belongsToMany(SocialMedia::class, 'post_social_media');
-    }
+    
 }

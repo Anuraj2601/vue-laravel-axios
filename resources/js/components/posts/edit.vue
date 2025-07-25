@@ -2,7 +2,7 @@
   <div class="w-full">
     <div class="bg-white p-6 rounded-lg shadow-lg">
       <div class="flex justify-between">
-        <h2 class="text-2xl font-semibold">Manage Posts for {{ props.platformName }}</h2>
+        <h2 class="text-2xl font-semibold"> {{ props.showEdit ? `Manage ${props.platformName} Posts` :  'Create Social Media'}}</h2>
         <button
           type="button"
           class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 sm:mt-0 sm:w-auto"
@@ -15,13 +15,29 @@
         </button>
       </div>
 
-      <button type="button" @click="addForm" class="btn btn-primary mb-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none text-sm">Add New Post</button>
+      
 
           <div class="mb-2">
-              <Add :forms="forms" :errors="formErrors" @created="fetchPosts" @remove="removeForm" />
+            <!-- Social Media Create Form -->
+            <AddS :formsSoc="formsSoc" @name="handleSocialMediaName" :errorsSoc="formErrors2" v-if="!props.showEdit" />
+
+            <!-- Edit Social Media Form -->
+            <Edit :formsSoc1="formsSoc1" :errorsSoc="formErrors1" :socialMediaId="props.socialMediaId" v-if="props.showEdit" />
+              <div :class="[border_t, border_u]">
+                <h2 class="text-2xl font-semibold">Create {{ props.showEdit ? ' & Edit' : '' }} Posts</h2>
+                    <button type="button" @click="addForm" class="btn btn-primary mb-4 px-4 py-2 mt-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none text-sm">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                      </svg>
+                    </button>
+                </div>
+
+                <!-- Add Posts Form -->
+              <Add :forms="forms" :errors="formErrors" @remove="removeForm"  />
           </div>
       
-      <form @submit.prevent="updatePosts">
+        <!-- Edit Posts Form -->
+      <form @submit.prevent="updatePosts" v-if="props.showEdit">
         <div v-for="(post, index) in posts" :key="post.id" class="mb-6" v-if="!loading">
           <div class="flex pt-2 justify-end">
              <button
@@ -142,25 +158,51 @@
           </button>
          </div>
       </form>
+      <div v-if="!props.showEdit">
+            <button 
+            type="button" 
+            @click="submitFormAdd"
+            class="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+            >
+            Submit
+          </button>
+         </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, markRaw } from 'vue';
 import axios from 'axios';
 import Multiselect from 'vue-multiselect';
 import Add from './add.vue';
+import AddS from '../socialmedia/add.vue';
+import Edit from '../socialmedia/edit.vue';
 
 const emit = defineEmits(['updated']);
 const posts = ref([]);
 const open = ref(false);
 const loading = ref(false);
 const erroru = ref([]);
+const SName = ref('');
+
+function handleSocialMediaName(name) {
+    SName.value = name;
+}
 
 const forms = ref([
   { name: '', description: '', tags: [], socialMedia: [] }
 ]);
+
+const formsSoc = ref([
+  {platform: '', location: '', date: ''}
+]);
+
+const formsSoc1 = ref({
+    platform: '',
+    location: '',
+    date: ''
+});
 
 function addForm() {
   open.value= true;
@@ -177,11 +219,16 @@ function removeForm(index) {
 }
 
 const formErrors = ref([]);
+const formErrors1 = ref([]);
+const formErrors2 = ref({});
 
 const tags = ref([]);
 const socialMedia = ref([]);
 const token = localStorage.getItem('auth_token');
+const border_u = ref('mt-4 mb-2 flex justify-between');
+const border_t = ref('border-t');
 
+/* Props that pass to child component */
 const props = defineProps({
     socialMediaId: {
         type: [String, Number],
@@ -190,9 +237,26 @@ const props = defineProps({
     platformName: {
       type: [String],
       required: true,
+    },
+    showEdit: {
+      type: [Boolean],
+      required: true,
     }
 });
 
+/* Fetch Social Media Details by ID */
+const fecthSocialMediaById = async () => {
+    const res = await axios.get(`api/social-media/${props.socialMediaId}`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
+    console.log(props.socialMediaId,res.data);
+
+    formsSoc1.value = res.data.social_media;
+}
+
+/* Fetch Posts that relevant to the Social Media ID */
 const fetchPostsForSocialMedia = async () => {
       loading.value = true;
     try {
@@ -210,6 +274,7 @@ const fetchPostsForSocialMedia = async () => {
     }
 };
 
+/* Remove post from form */
 const removePost = (postId) => {
   const index = posts.value.findIndex(post => post.id === postId);
   if(index !== -1) {
@@ -252,12 +317,68 @@ const handleAddFormErrors = (errorObj) => {
 };
 
 
+//correct validation 
+const handleAddSocialMediaPostsErrors = (errorObj) => {
+    const socialErrors = {};
+    const postsErrors = [];
+
+    Object.entries(errorObj).forEach(([key, message]) => {
+        if(key.startsWith('forms.')) {
+            const match = key.match(/^forms\.(\d+)\.(\w+)$/);
+            if(match) {
+                const index = Number(match[1]);
+                const field = match[2];
+
+                if (!postsErrors[index]) {
+                    postsErrors[index] = {};
+                }
+
+                postsErrors[index][field] = message;
+            }
+        } else {
+            socialErrors[key] = message;
+        }
+    });
+
+    return {socialErrors, postsErrors};
+}
+
+
+const submitFormAdd = async () => {
+    formErrors.value = []; // Posts form errors
+    formErrors2.value = {}; // Social Media form errors
+
+    try {
+        const response = await axios.post('api/social-media/create', {
+            platform: formsSoc.value.platform,
+            location: formsSoc.value.location,
+            date: formsSoc.value.date,
+            forms: forms.value
+        }, {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+        if(response.data.msg == 'success') {
+            cancel();
+            emit('updated');
+        }
+    } catch (error) {
+        if(error.response) {
+            if(error.response && error.response.status == 422) {
+               const { socialErrors, postsErrors } =  handleAddSocialMediaPostsErrors(error.response.data.error);
+               formErrors2.value = socialErrors;
+               formErrors.value = postsErrors;
+            }
+        }
+    }
+}
 
 const submitForm = async() => {
     formErrors.value = {};
     erroru.value = {};
     try {
-        const response = await axios.post('api/posts/store', {
+        const response = await axios.post('api/social-media/store', {
         forms: forms.value
         }, {
             headers: {
@@ -276,14 +397,14 @@ const submitForm = async() => {
             }
         }
     }
+}
 
-    try {
+    /* try {
         const postsData = posts.value.map(post=> ({
             id: post.id,
             name: post.name,
             description: post.description,
             tags: post.tags.map(tag=> tag.id),
-            /* social_media: post.social_media.map(sm=> sm.id), */
         }));
         console.log(postsData);
         const response = await axios.post('api/posts/update-all', {posts: postsData}, {
@@ -301,12 +422,17 @@ const submitForm = async() => {
             erroru.value = formatValidationErrors(error.response.data.error);
         }
     }
-};
+}; */
+
+
 
 const cancel = () => {
     emit('close');
 };
 
-onMounted(fetchPostsForSocialMedia);
+onMounted( async () => {
+  await fecthSocialMediaById(),
+  fetchPostsForSocialMedia()
+});
 
 </script>

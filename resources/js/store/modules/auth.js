@@ -10,6 +10,7 @@ export default {
     }),
     getters: {
         isAuthenticated: state => !!state.token,
+        token: state => state.token,
         hasRole: (state) => (role) => state.roles.includes(role),
         hasPermission: (state) => (permission) => state.permissions.includes(permission)
     },

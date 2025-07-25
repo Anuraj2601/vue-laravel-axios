@@ -1,15 +1,12 @@
 <script setup>
 import axios from 'axios';
 import { onMounted, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
 import Multiselect from 'vue-multiselect';
 import SuccessModal from '../modals/SuccessModal.vue';
 
+
 const tags = ref([]);
 const socialMedia = ref([]);
-
-const router = useRouter();
-const route  = useRoute();
 
 const token = localStorage.getItem('auth_token');
 const showSuccess = ref(false);
@@ -17,6 +14,7 @@ const showSuccess = ref(false);
 const modalTitle = ref('');
 const modalMessage = ref('');
 const modalRef = ref(null);
+
 
 const showModal = (title, message) => {
   modalTitle.value = title;
@@ -34,6 +32,7 @@ const props = defineProps({
     },
     errors: {
         type: Array,
+        required: true
     }
 });
 const closeForm = async () => {
@@ -61,9 +60,6 @@ const fetchTags = async () => {
     tags.value = response.data.tags;
     socialMedia.value = response.data.socialMedia;
 }
-
-
-
 
 function showSuccessModal() {
     showSuccess.value = true;
@@ -169,37 +165,37 @@ onMounted(fetchTags);
                         </div>
                     </div>
 
-                    <div class="">
+                    <!-- <div class="">
                         <label for="socialMedia" class="block text-lg font-medium text-gray-700 text-left">Social Media<span class="text-red-400 text-base font-medium">*</span></label>
                         <Multiselect
                             id="multiselect"
                             v-model="form.socialMedia"
                             :options="socialMedia"
-                            :multiple="true"
+                            :multiple="false"
                             :close-on-select="true"
                             :clear-on-select="false"
                             :preserve-search="true"
-                            :hide-selected="true"
+                            :hide-selected="false"
                             
                             label="platform"
                             track-by="id"
                             :preselect-first="false"
                             class="mt-2"
                         >
-                            <template #tag="{ option, remove }">
-                                <span class="bg-green-100 text-green-800 px-2.5 py-0.5 rounded-full mr-2">
-                                    {{ option.platform }}
-                                    <span class="ml-2 text-red-500 cursor-pointer" @click="remove(option)">❌</span>
-                                </span>
-                            </template>
-                            <template #clear="props">
+                            <template #tag="{ option, remove }"> -->
+                                <!-- <span class="bg-green-100 text-green-800 px-2.5 py-0.5 rounded-full mr-2"> -->
+                                    <!-- {{ option.platform }} -->
+                                    <!-- <span class="ml-2 text-red-500 cursor-pointer" @click="remove(option)">❌</span> -->
+                                <!-- </span> -->
+                           <!--  </template> -->
+                            <!-- <template #clear="props">
                                 <div class="multiselect__clear" v-if="form.socialMedia.length" @mousedown.prevent.stop="clearAll(props.search)"></div>
-                            </template>
-                        </Multiselect>
+                            </template> -->
+                       <!--  </Multiselect>
                         <div v-if="props.errors?.[index]?.socialMedia" class="text-red-500 text-sm mt-2">
                             {{ props.errors[index].socialMedia }}
                         </div>
-                    </div>
+                    </div> -->
 
                     <div class="w-full mt-4 text-left">
                         <button type="button" @click="handleRemove(index)" class="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 focus:outline-none text-sm">Remove</button>

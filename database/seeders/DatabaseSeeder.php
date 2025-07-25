@@ -47,7 +47,7 @@ class DatabaseSeeder extends Seeder
             Tag::create(['name' =>'tag2']);
             Tag::create(['name' =>'technology']); */
 
-            SocialMedia::create(['platform' => ''])
+
 
     }
 }

@@ -14,8 +14,8 @@ return new class extends Migration
     public function up()
     {
         Schema::table('social_media', function (Blueprint $table) {
-            /* $table->dropForeign(['post_id']);
-            $table->dropColumn('post_id'); */
+            $table->string('location')->nullable();
+            $table->date('date')->nullable();
         });
     }
 
@@ -27,7 +27,7 @@ return new class extends Migration
     public function down()
     {
         Schema::table('social_media', function (Blueprint $table) {
-            //
+            $table->dropColumn(['location', 'date']);
         });
     }
 };

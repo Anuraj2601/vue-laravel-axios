@@ -13,9 +13,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('social_media', function (Blueprint $table) {
-            /* $table->dropForeign(['post_id']);
-            $table->dropColumn('post_id'); */
+        Schema::table('posts', function (Blueprint $table) {
+            $table->unsignedBigInteger('social_media_id')->nullable();
+            $table->foreign('social_media_id')->references('id')->on('social_media')->onDelete('set null');
         });
     }
 
@@ -26,8 +26,9 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('social_media', function (Blueprint $table) {
-            //
+        Schema::table('posts', function (Blueprint $table) {
+            $table->dropForeign('social_media_id');
+            $table->dropColumn('social_media_id');
         });
     }
 };

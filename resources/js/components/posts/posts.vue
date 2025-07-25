@@ -1,24 +1,9 @@
 <template>
             <div class="title text-center mb-6">
-                <h2 class="text-2xl font-semibold">Posts List</h2>
+                <h2 class="text-2xl font-semibold">Social Media List</h2>
                 </div>
 
-                <div class="tabs-container mb-6 ml-16">
-                    <div class="flex space-x-4">
-                        <button 
-                            v-for="(social, index) in socialMediaTypes" 
-                            :key="index"
-                            :class="{
-                                'bg-blue-100 text-blue-600 rounded-full py-2 px-6 transition-all duration-300 ease-in-out': selectedTab === social.id,
-                                'text-gray-600 hover:text-blue-100 hover:bg-blue-600 rounded-full py-2 px-6 border-2 border-transparent transition-all duration-300 ease-in-out': selectedTab !== social.id
-                            }"
-                            class="text-sm font-semibold focus:outline-none transition-all duration-300"
-                            @click="selectTab(social.id,social.platform)"
-                            >
-                            {{ social.platform }}
-                        </button>
-                    </div>
-                </div>
+                
                 <Modal
                     ref="modalRef"
                     :title="modalTitle"
@@ -26,7 +11,19 @@
                     modal-id="feedbackModal"
                 />
 
-                <div class="title flex justify-between items-center mb-6">
+                <div class="flex justify-end">
+                    <button 
+                        class="bg-stone-800 text-white mr-32 px-2 py-2 rounded-lg hover:bg-black-400 focus:outline-none focus:ring-2 focus:ring-black-500 flex items-center space-x-2"
+                        @click="addPost(selectedTab,selectedPlatform)"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                      </button>
+                </div>
+                
+
+                <!-- <div class="title flex justify-between items-center mb-6">
                   <div class="flex justify-between">
                     <button 
                         class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 flex items-center space-x-2"
@@ -48,11 +45,47 @@
                         placeholder="Search posts by name or description..."
                         />
                     </div>
-                </div>
+                </div> -->
 
-                <div class="overflow-x-auto ml-15 mr-15">
-                  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div 
+                <div class="overflow-x-auto mr-10">
+                    <div class="list-container">
+                      <div class="flex items-center text-left font-semibold text-gray-700 mt-6 gap-4 px-12">
+                        <span class="flex-1 text-sm">Platform</span>
+                        <span class="flex-1 text-sm">URL</span>
+                        <span class="flex-1 text-sm">Location</span>
+                        <span class="flex-1 text-sm">Date</span>
+                        <span class="text-sm w-auto">Action</span>
+                      </div>
+                        <ul class="w-full bg-white-100 p-4 space-y-2 rounded-lg">
+                          <li 
+                            v-for="(social, index) in socialMediaTypes" 
+                            :key="index"
+                            :class="{
+                              /* 'bg-blue-100 text-blue-600': selectedTab === social.id,
+                              'text-gray-600 hover:text-blue-100 hover:bg-blue-600': selectedTab !== social.id */
+                            }"
+                            class="list-item py-2 px-6 cursor-pointer text-left bg-gray-100 flex justify-between items-center border-b-2 border-gray-200 rounded-lg"
+                            @click="selectTab(social.id, social.platform)"
+                          >
+                            <div class="flex items-center text-left mt-2 gap-4">
+                              <span class="flex-1 text-lg text-black truncate">{{ social.platform }}</span>
+                              <span class="flex-1 text-sm text-gray-500 truncate">{{ social.url }}</span>
+                              <span class="flex-1 text-sm text-gray-500 truncate">{{ social.location }}</span>
+                              <span class="flex-1 text-sm text-gray-500 truncate">{{ social.date }}</span>
+                                <button 
+                                class="bg-yellow-500 text-white p-2 rounded-md hover:bg-yellow-400 text-sm flex items-center space-x-2"
+                                @click="editPost(social.id,social.platform)"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                  </svg>
+                                Edit
+                              </button>
+                            </div>
+                          </li>
+                        </ul>
+                    </div>
+                    <!-- <div 
                       v-for="(post, index) in posts" 
                       :key="post.id" 
                       class="bg-white shadow-lg rounded-lg p-4 h-full flex flex-col justify-between hover:shadow-xl/20"
@@ -109,8 +142,8 @@
                           </svg>
                           <div class="text-base">Processing....</div>
                         </button>
-                    </div>
-                  </div>
+                    </div> -->
+                  
                 </div>
 
 
@@ -124,9 +157,9 @@
 
                 </WarningModal>
 
-                <EditDrawer :show="showDrawer" :postId="selectedPostId" @close="showDrawer=false"  @updated="fetchPosts"/>
+                <!-- <EditDrawer :show="showDrawer" :postId="selectedPostId" @close="showDrawer=false"  @updated="fetchPosts"/> -->
 
-                <div class="mt-6">
+                <!-- <div class="mt-6">
                     <nav aria-label="Page navigation example">
                     <ul class="flex justify-center space-x-2">
                         <li class="page-item" :class="{ 'opacity-50 cursor-not-allowed': currentPage === 1 }">
@@ -164,7 +197,7 @@
                         </li>
                     </ul>
                 </nav>
-            </div>
+            </div> -->
 
             <TransitionRoot as="template" :show="edit">
             <Dialog class="relative z-10">
@@ -197,7 +230,7 @@
                     class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 w-full sm:max-w-lg"
                     >
                     
-                    <Edit :socialMediaId="selectedSocialMediaId" :platformName="selectedSocialMediaName" @close="closeEdit" @updated="fetchPosts" />
+                    <Edit :socialMediaId="selectedSocialMediaId" :showEdit="showEditForm" :platformName="selectedSocialMediaName" @close="closeEdit" @updated="fetchSocialMedia" /> 
                     
                     </DialogPanel>
                 </TransitionChild>
@@ -231,13 +264,13 @@ const postToDelete = ref(null);
 const edit = ref(false);
 const selectedSocialMediaId = ref(null);
 const selectedSocialMediaName = ref(null);
-const showDrawer = ref(false);
 const socialMediaTypes = ref([]);
 const selectedTab = ref(1);
 const selectedPlatform = ref("Facebook");
 const modalTitle = ref('');
 const modalMessage = ref('');
 const modalRef = ref(null);
+const showEditForm = ref(false);
 
 const showModal = (title, message) => {
   modalTitle.value = title;
@@ -249,6 +282,14 @@ function editPost(id,name) {
     selectedSocialMediaId.value = id;
     selectedSocialMediaName.value = name;
     edit.value = true;
+    showEditForm.value = true;
+}
+
+function addPost(id,name) {
+    selectedSocialMediaId.value = id;
+    selectedSocialMediaName.value = name;
+    edit.value = true;
+    showEditForm.value = false;
 }
 
 function closeEdit() {

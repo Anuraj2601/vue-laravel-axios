@@ -16,14 +16,15 @@ class PostSocialMediaSeeder extends Seeder
      */
     public function run()
     {
-        /* $postIds = [10,13,14,17,34,35,36,38,39,40,42];
+        /* $postIds = [43,44,45,46,49,51,52,54,55,56];
 
         foreach ($postIds as $postId) {
-            $socialMedia = SocialMedia::inRandomOrder()->limit(3)->get();
-
-            foreach ($socialMedia as $platform) {
-                $post = Post::find($postId);
-                $post->socialMedia()->attach($platform->id);
+            $socialMedia = SocialMedia::inRandomOrder()->first();
+            $post = Post::find($postId);
+            
+            if($post && $socialMedia) {
+                $post->social_media_id = $socialMedia->id;
+                $post->save();
             }
         } */
     }
