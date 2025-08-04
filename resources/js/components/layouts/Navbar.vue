@@ -5,16 +5,23 @@
                     <a
                         class="text-xl text-left font-semibold text-gray-700 no-underline"
                         href="#"
-                        >User Posts</a
+                        >{{ $t('navbar.userPosts') }}</a
                     >
                     <div class="relative">
-                        <div class="flex space-x-2" @click="toggleDropdown">
+                        <div class="flex space-x-2">
+                        <div class="language-switcher text-xl mt-2">
+                            <select v-model="locale" @change="changeLocale" class="p-1 rounded">
+                                <option v-for="loc in availableLocales" :key="loc" :value="loc">
+                                {{ getFlag(loc) }} {{ loc.toUpperCase() }}
+                                </option>
+                            </select>
+                        </div>
                         <button
                             ref="buttonRef"
                             type="button"
                             id="user-menu-button"
                             aria-expanded="false"
-                            
+                            @click="toggleDropdown"
                             class="flex items-center justify-center w-12 h-12 rounded-full hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300"
                             >
                             <img
@@ -43,7 +50,7 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
                                 </svg>
-                                <span>Profile</span>
+                                <span>{{ $t('navbar.profile') }}</span>
                             </a>
                             <a
                                 href="#"
@@ -53,7 +60,7 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15" />
                                 </svg>
-                                <span>Logout</span>
+                                <span>{{ $t('navbar.logout') }}</span>
                             </a>
                         </div>
                     </div>
@@ -61,7 +68,7 @@
             </div>
         </nav>
 
-        <Profile :show="showProfile" @close="showProfile=false" /> 
+        <Profile :show="showProfile" @close="showProfile=false" @updated="fetchUserData"/> 
 </template>
 
 <script setup>
@@ -69,6 +76,8 @@ import { onBeforeUnmount, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import Profile from "../users/profile.vue";
 import axios from "axios";
+import { useI18n } from "vue-i18n";
+import { useStore } from "vuex";
 
 const router = useRouter();
 const userName = ref("User");
@@ -84,6 +93,24 @@ const userId = localStorage.getItem('user_id');
 const name = localStorage.getItem("user_name");
 const role = localStorage.getItem("user_role");
 const token = localStorage.getItem('auth_token');
+const store = useStore();
+
+const { locale } = useI18n();
+
+const availableLocales = ['en', 'de'];
+
+const changeLocale = (event) => {
+  locale.value = event.target.value;
+};
+
+const getFlag = (locale) => {
+  const flags = {
+    en: '🇺🇸',
+    de: '🇩🇪',
+    fr: '🇫🇷', // Add more if needed
+  };
+  return flags[locale] || '🏳️';
+};
 
 const logoutUser = () => {
     localStorage.removeItem("auth_token");
@@ -124,6 +151,9 @@ const fetchUserData = async () => {
     userImage.value = user.image
       ? `${user.image}`
       : `storage/profile_images/sample.jpg`;
+
+   userName.value = user.name;
+    localStorage.setItem("user_name", user.name);
   } catch (error) {
     console.error('Failed to fetch user profile:', error);
   }
@@ -131,7 +161,6 @@ const fetchUserData = async () => {
 
 onMounted(() => {
     fetchUserData();
-    
     
     if (name) {
         userName.value = name;

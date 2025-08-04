@@ -24,8 +24,8 @@
           leave-to="opacity-0 scale-95"
         >
           <DialogPanel class="bg-white rounded-lg shadow-xl transform transition-all w-full max-w-md p-6 text-center">
-            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100">
-              <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+              <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 19c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8z" />
               </svg>
             </div>
@@ -41,11 +41,8 @@
             </div>
 
             <div class="mt-6 flex justify-center space-x-4">
-              <button @click="confirm" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 text-sm">
-                {{ $t('common.yes') }} , {{ $t('common.delete') }}
-              </button>
               <button @click="cancel" class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 text-sm">
-                {{ $t('common.cancel') }}
+                Cancel
               </button>
             </div>
           </DialogPanel>

@@ -11,7 +11,7 @@
         leave-from="opacity-100"
         leave-to="opacity-0"
       >
-        <div class="fixed inset-0 bg-gray-500/75 transition-opacity" @click="$emit('close')" />
+        <div class="fixed inset-0 bg-gray-500/75 transition-opacity" @click="cancel" @updated="getProfileInfo" />
       </TransitionChild>
 
       <!-- Modal Dialog -->
@@ -29,11 +29,11 @@
             class="relative w-full max-w-md transform overflow-hidden rounded-lg bg-white p-6 text-left shadow-xl transition-all"
           >
             <!-- Close Button -->
-            <button @click="$emit('close')" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
+            <button @click="cancel" @updated="getProfileInfo" class="absolute top-2 ml-95 text-gray-500 hover:text-gray-700">
               ✕
             </button>
 
-            <h2 class="text-xl font-semibold text-gray-800 text-center mb-4">Edit Profile</h2>
+            <h2 class="text-xl font-semibold text-gray-800 text-center mb-4">{{ $t('profile_edit.title') }}</h2>
 
             <form @submit.prevent="saveChanges" class="space-y-4">
               <!-- <div class="flex justify-center">
@@ -61,40 +61,40 @@
                     />
                 </label>
                 <span v-if="errors.image" class="text-red-500 text-sm mt-2">
-                            {{ errors.image }}
+                            {{ $t('profile_edit.errors.image') }}
                     </span>
                 <span class="mt-2 text-indigo-600 hover:text-indigo-500 font-semibold cursor-pointer">
-                    Upload a Photo
+                    {{ $t('profile_edit.upload_photo') }}
                 </span>
                 </div>
             </div>
 
               <div>
-                <label class="block text-lg font-medium text-gray-700">Name</label>
+                <label class="block text-lg font-medium text-gray-700">{{ $t('profile_edit.labels.name') }}</label>
                 <input
                   v-model="user.name"
                   type="text"
                   class="mt-2 block w-full p-3 rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
                 <span v-if="errors.name" class="text-red-500 text-sm mt-2">
-                            {{ errors.name }}
+                            {{ $t('profile_edit.errors.name') }}
                     </span>
               </div>
 
               <div>
-                <label class="block text-lg font-medium text-gray-700">Email</label>
+                <label class="block text-lg font-medium text-gray-700">{{ $t('profile_edit.labels.email') }}</label>
                 <input
                   v-model="user.email"
                   type="email"
                   class="mt-2 p-3 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
                 <span v-if="errors.email" class="text-red-500 text-sm mt-2">
-                            {{ errors.email }}
+                            {{ $t('profile_edit.errors.email') }}
                 </span>
               </div>
 
               <div>
-                <label class="block text-lg font-medium text-gray-700">Role</label>
+                <label class="block text-lg font-medium text-gray-700">{{ $t('profile_edit.labels.role') }}</label>
                 <input
                   v-model="user.role"
                   type="text"
@@ -102,24 +102,24 @@
                   disabled
                 />
                 <span v-if="errors.role" class="text-red-500 text-sm mt-2">
-                            {{ errors.role }}
+                            {{ $t('profile_edit.errors.role') }}
                 </span>
               </div>
 
               <div class="mt-6 flex justify-end space-x-3">
                 <button
                   type="button"
-                  @click="$emit('close')"
+                  @click="cancel"
                   class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 text-sm"
                 >
-                  Cancel
+                  {{ $t('profile_edit.buttons.cancel') }}
                 </button>
                 <button
                   @click="updateProfileInfo"
                   type="submit"
                   class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm"
                 >
-                  Save Changes
+                  {{ $t('profile_edit.buttons.save') }}
                 </button>
               </div>
             </form>
@@ -131,7 +131,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { TransitionRoot, TransitionChild } from '@headlessui/vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
@@ -143,7 +143,7 @@ const props = defineProps({
 
 const userId = localStorage.getItem('user_id');
 const token = localStorage.getItem('auth_token');
-const emit = defineEmits(['close', 'save']);
+const emit = defineEmits(['close', 'save', 'updated']);
 const router = useRouter();
 
 const defaultImage = 'storage/profile_images/sample.jpg';
@@ -157,6 +157,11 @@ function handleFileChange(event) {
     selectedFile.value = file; 
     imagePreview.value = URL.createObjectURL(file);
   }
+}
+
+function cancel () {
+  emit('close');
+  emit('updated');
 }
 
 const user = ref({
@@ -173,9 +178,21 @@ const user = ref({
         image: ''
     });
 
-function saveChanges() {
-  emit('save', { ...user });
-  /* emit('close'); */
+function resetForm() {
+  user.value = {
+    name: '',
+    email: '',
+    role: '',
+    image: ''
+  };
+  imagePreview.value = null;
+  selectedFile.value = null;
+  errors.value = {
+    name: '',
+    email: '',
+    role: '',
+    image: ''
+  };
 }
 
 const getProfileInfo = async () => {
@@ -221,6 +238,7 @@ const updateProfileInfo = async () => {
 
     if (response.data.status === 'success') {
       emit('close');
+      emit('updated');
       getProfileInfo();
       router.push('dashboard');
       console.log(response.data);
@@ -239,4 +257,11 @@ const updateProfileInfo = async () => {
 
 
 onMounted(getProfileInfo);
+
+watch(() => props.show, async (newVal) => {
+  if (newVal) {
+    resetForm();
+    await getProfileInfo();
+  }
+});
 </script>

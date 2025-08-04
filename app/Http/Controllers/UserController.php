@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Models\SocialMedia;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -125,17 +126,21 @@ class UserController extends Controller
     }
 
     public function index() {
-        $users = User::with('roles')->get();
+        $usersPaginator = User::with('roles')->paginate(5); // Adjust 10 as needed
+
         return response()->json([
             'msg' => 'User Details retrieved successfully',
-            'Users' => $users->map(function($user) {
+            'Users' => $usersPaginator->getCollection()->map(function($user) {
                 return [
-                    'id' => $user->id,
-                    'name' => $user->name,
+                    'id'    => $user->id,
+                    'name'  => $user->name,
                     'email' => $user->email,
-                    'role' => $user->roles->pluck('name')
+                    'role'  => $user->roles->pluck('name')
                 ];
-            })
+            }),
+            'total'        => $usersPaginator->total(),
+            'current_page' => $usersPaginator->currentPage(),
+            'last_page'    => $usersPaginator->lastPage(),
         ]);
     }
 
@@ -151,7 +156,7 @@ class UserController extends Controller
 
             $request->validate([
                 'name' => 'required|string',
-                'email'=> 'required|email',
+                'email'=> 'required|email|unique:users,email,' . $user->id,
                 'image'=> 'required|max:2048'
             ]);
 
@@ -234,13 +239,15 @@ class UserController extends Controller
 
         $userCount = User::count();
         $totalpostCount = Post::count();
+        $totalsocialCount = SocialMedia::count();
         $mypostCount = Post::where('user_id', $user->id)->count();
 
         return response()->json([
             'msg' => 'data count fetch successfully',
             'user_count' => $userCount,
             'totalpost_count' => $totalpostCount,
-            'mypost_count' => $mypostCount
+            'mypost_count' => $mypostCount,
+            'socialCount' => $totalsocialCount
         ]);
      }
 

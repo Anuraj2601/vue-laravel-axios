@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Models\Role;
 
 class RegisterController extends Controller
 {
@@ -25,7 +26,8 @@ class RegisterController extends Controller
             $validated = $request->validate([
                 'name'  => 'required|string|max:30',
                 'email' => 'required|string|email|max:200|unique:users,email',
-                'password'  => 'required|string|confirmed|min:8'
+                'password'  => 'required|string|confirmed|min:8',
+                'user_role' => 'required|nullable|string|exists:roles,name',
             ]);
 
             $user = User::create([
@@ -34,7 +36,13 @@ class RegisterController extends Controller
                 'password'  => Hash::make($validated['password']),
             ]);
 
-            $user->assignRole('user');
+            $roleName = $validated['user_role'] ?? 'user';
+
+            if (Role::where('name', $roleName)->exists()) {
+                $user->assignRole($roleName);
+            } else {
+                $user->assignRole('user');
+            }
 
             $token = $user->createToken('Laravel_Axios')->plainTextToken;
 
@@ -78,8 +86,11 @@ class RegisterController extends Controller
                 'password'=> 'required|string|min:8'
             ]);
 
-            if(Auth::attempt(['email' => $validated['email'], 'password' => $validated['password']])) {
-                $user = Auth::user();
+            $user = User::where('email', $request->email)->first();
+
+            if (!$user || !Hash::check($request->password, $user->password)) {
+                return response()->json(['message' => 'Invalid credentials'], 401);
+            }
 
                 $token = $user->createToken('Laravel_Axios')->plainTextToken;
 
@@ -94,12 +105,6 @@ class RegisterController extends Controller
                     'usr'   => $user,
                     'status'    => 'success'
                 ]);
-            }
-
-            return response()->json([
-                'msg' => 'Incorrect username or password',
-                'status' => 'error'
-            ],401);
 
         } catch (ValidationException $e) {
             $errors = $e->errors();

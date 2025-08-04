@@ -12,11 +12,11 @@
       <div class="w-full md:w-1/2 lg:w-1/3 p-6 bg-white rounded-lg shadow-lg">
         <form @submit.prevent="loginUser">
           <!-- Modal Component -->
-          <Modal 
-            ref="modalRef"
-            :title="modalTitle"
-            :message="modalMessage"
-            modal-id="feedbackModal"
+          <ErrorModal 
+            :show="showError"
+            title="Error"
+            message="Incorrect Username or Password"
+            @close="showError=false"
           />
 
           <!-- Email input -->
@@ -70,6 +70,8 @@
     import { useRouter } from 'vue-router';
     import Modal from './modals/Modal.vue';
     import store from '../store';
+    import WarningModal from './modals/WarningModal.vue';
+    import ErrorModal from './modals/ErrorModal.vue';
 
     const email = ref('');
     const password = ref('');
@@ -79,6 +81,7 @@
         email: '',
         password: '',
     });
+    const showError = ref(false);
 
     const modalTitle = ref('');
     const modalMessage = ref('');
@@ -118,7 +121,8 @@
                     }
                 } else if (error.response.status === 401) {
                     errorl.value = error.response.data.msg;
-                    showModal('Error', errorl.value);
+                    showError.value = true;
+                    
                 }  else {
                     errorl.value = error.response.data.msg;
                     console.error('test', errorl);

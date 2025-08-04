@@ -1,6 +1,6 @@
 <script setup>
 import axios from 'axios';
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import SuccessModal from '../modals/SuccessModal.vue';
 
 const tags = ref([]);
@@ -27,9 +27,16 @@ const closeForm = async () => {
   }
 }
 
-function formName() {
-    emit('name', form.name);
-}
+
+
+const today = computed(() => {
+  const date = new Date();
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const yyyy = date.getFullYear();
+  return `${yyyy}-${mm}-${dd}`;
+});
+
 
 function cancel() {
   emit('close')
@@ -63,7 +70,12 @@ function showSuccessModal() {
     }, 1500)
 }
 
-onMounted(fetchTags);
+onMounted(() => {
+    fetchTags();
+    if(!props.formsSoc.date) {
+        props.formsSoc.date = today.value;
+    }
+});
 </script>
 
 <template>
@@ -77,59 +89,60 @@ onMounted(fetchTags);
         </div>
         <SuccessModal
             :show="showSuccess"
-            title="Post Created Successfully"
-            message="Your new post has been saved"
+            :title="$t('social_add.success_title')"
+            :message="$t('social_add.success_message')"
             @close="showSuccess= false"
         >
         </SuccessModal>
 
-        <div class="rounded-lg">
+        <div class="rounded-lg mt-2">
                 <form class="space-y-6">
                     
                     <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
                         <div class="w-full md:w-1/2">
-                            <label for="post_name" class="text-lg font-medium text-gray-700 text-left">Name<span class="text-red-400 text-base font-medium">*</span></label>
+                            <label for="social_media_name" class="text-lg font-medium text-gray-700 text-left"> {{ $t('social_add.name_label') }}<span class="text-red-400 text-base font-medium">*</span></label>
                             <input 
                                 type="text" 
                                 v-model="props.formsSoc.platform" 
-                                id="post_name" 
-                                @input="formName"
+                                id="social_media_name" 
                                 class="mt-2 p-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" 
-                                placeholder="Ex: Whatsapp" 
+                                :placeholder="$t('social_add.name_placeholder')"
                             />
                             <div v-if="props.errorsSoc?.platform" class="text-red-500 text-sm mt-2">
-                                {{ props.errorsSoc.platform }}
+                                {{ $t('social_add.name_required') }}
                             </div>
                         </div>
 
                         <div class="w-full md:w-1/2">
-                            <label for="description" class="text-lg font-medium text-gray-700 text-left">Location<span class="text-red-400 text-base font-medium">*</span></label>
+                            <label for="description" class="text-lg font-medium text-gray-700 text-left">{{$t('social_add.location_label')}}<span class="text-red-400 text-base font-medium">*</span></label>
                             <input 
                                 type="text" 
                                 v-model="props.formsSoc.location" 
                                 id="description" 
                                 class="mt-2 p-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" 
-                                placeholder="Ex: United Status"
+                                :placeholder="$t('social_add.location_placeholder')"
                             />
                             <div v-if="props.errorsSoc?.location" class="text-red-500 text-sm mt-2">
-                                {{ props.errorsSoc.location }}
+                                {{ $t('social_add.location_required') }}
                             </div>
                         </div>
                     </div>
 
                     <div>
-                        <label for="date" class="block text-lg font-medium text-gray-700 text-left">Date<span class="text-red-400 text-base font-medium">*</span></label>
+                        <label for="date" class="block text-lg font-medium text-gray-700 text-left">{{$t('social_add.date_label')}}<span class="text-red-400 text-base font-medium">*</span></label>
                         <div class="text-left w-1/2">
-                            <input 
-                                type="date" 
-                                v-model="props.formsSoc.date" 
-                                id="date" 
-                                class="mt-2 p-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
-                                placeholder="Select date"
-                            />
-                            <div v-if="props.errorsSoc?.date" class="text-red-500 text-sm mt-2">
-                                {{ props.errorsSoc.date }}
-                            </div>
+                        <input 
+                            type="date" 
+                            v-model="formsSoc.date" 
+                            id="date" 
+                            class="mt-2 p-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="$t('social_add.date_placeholder')"
+                            :min="today"
+                            :max="today"
+                        />
+                        <div v-if="errorsSoc?.date" class="text-red-500 text-sm mt-2">
+                            {{ $t('social_add.date_required') }}
+                        </div>
                         </div>
                     </div>
                 </form>

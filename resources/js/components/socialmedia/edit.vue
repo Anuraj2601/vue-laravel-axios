@@ -24,11 +24,19 @@ const props = defineProps({
         type: Object,
         required: true
     },
-    errorsSoc1: {
-        type: Array,
+    errorsSoc: {
+        type: Object,
+        required: true
     }
 });
 
+const today = computed(() => {
+      const date = new Date();
+      const dd = String(date.getDate()).padStart(2, '0');
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const yyyy = date.getFullYear();
+      return `${yyyy}-${mm}-${dd}`;
+});
 /* const fecthSocialMediaById = async () => {
     const res = await axios.get(`api/social-media/${props.socialMediaId}`, {
         headers: {
@@ -90,8 +98,8 @@ onMounted(fetchTags);
 
         <SuccessModal
             :show="showSuccess"
-            title="Post Created Successfully"
-            message="Your new post has been saved"
+            :title="$t('social_edit.success.title')"
+            :message="$t('social_edit.success.message')"
             @close="showSuccess= false"
         >
 
@@ -99,50 +107,51 @@ onMounted(fetchTags);
 
         <div class="rounded-lg">
                 <form class="space-y-6">
-                    
+                    <!-- <input type="hidden" v-model="props.formsSoc1.id" /> -->
                     <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
                         <div class="w-full md:w-1/2">
-                            <label for="post_name" class="text-lg font-medium text-gray-700 text-left">Name<span class="text-red-400 text-base font-medium">*</span></label>
+                            <label for="social_media_name" class="text-lg font-medium text-gray-700 text-left">{{ $t('social_edit.label.platform') }}<span class="text-red-400 text-base font-medium">*</span></label>
                             <input 
                                 type="text" 
                                 v-model="props.formsSoc1.platform" 
-                                id="post_name" 
-                                @input="formName"
+                                id="social_media_name" 
                                 class="mt-2 p-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" 
-                                placeholder="Ex: Whatsapp" 
+                                :placeholder="$t('social_edit.placeholder.platform')" 
                             />
-                            <div v-if="props.errorsSoc1?.[index]?.name" class="text-red-500 text-sm mt-2">
-                                {{ props.errorsSoc1[index].name }}
+                            <div v-if="props.errorsSoc?.platform" class="text-red-500 text-sm mt-2">
+                                {{ $t('social_edit.error.platform') }}
                             </div>
                         </div>
 
                         <div class="w-full md:w-1/2">
-                            <label for="location" class="text-lg font-medium text-gray-700 text-left">Location<span class="text-red-400 text-base font-medium">*</span></label>
+                            <label for="location" class="text-lg font-medium text-gray-700 text-left">{{ $t('social_edit.label.location') }}<span class="text-red-400 text-base font-medium">*</span></label>
                             <input 
                                 type="text" 
                                 v-model="props.formsSoc1.location" 
                                 id="location" 
                                 class="mt-2 p-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" 
-                                placeholder="Ex: United Status"
+                                :placeholder="$t('social_edit.placeholder.location')"
                             />
-                            <div v-if="props.errorsSoc1?.[index]?.location" class="text-red-500 text-sm mt-2">
-                                {{ props.errorsSoc1[index].location }}
+                            <div v-if="props.errorsSoc?.location" class="text-red-500 text-sm mt-2">
+                                {{ $t('social_edit.error.location') }}
                             </div>
                         </div>
                     </div>
 
                     <div>
-                        <label for="date" class="block text-lg font-medium text-gray-700 text-left">Date<span class="text-red-400 text-base font-medium">*</span></label>
+                        <label for="date" class="block text-lg font-medium text-gray-700 text-left">{{ $t('social_edit.label.date') }}<span class="text-red-400 text-base font-medium">*</span></label>
                         <div class="text-left w-1/2">
                             <input 
                                 type="date" 
                                 v-model="props.formsSoc1.date" 
                                 id="date" 
                                 class="mt-2 p-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
-                                placeholder="Select date"
+                                placeholder="$t('social_edit.placeholder.date')"
+                                :min="today"
+                                :max="today"
                             />
-                            <div v-if="props.errorsSoc1?.[index]?.date" class="text-red-500 text-sm mt-2">
-                                {{ props.errorsSoc1[index].date }}
+                            <div v-if="props.errorsSoc?.date" class="text-red-500 text-sm mt-2">
+                                {{ $t('social_edit.error.date') }}
                             </div>
                         </div>
                     </div>

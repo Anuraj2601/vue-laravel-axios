@@ -101,40 +101,40 @@ onMounted(fetchTags);
         </SuccessModal>
 
         <div class="rounded-lg">
-                <div v-for="(form, index) in props.forms" :key="index" class="space-y-6">
-                    
+                <div v-for="(form, index) in props.forms" :key="index" class="space-y-6 mt-2">
+                    <span class="text-gray-600 text-base">#{{ index + 1 }}</span>
                     <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
                         <div class="w-full md:w-1/2">
-                            <label for="post_name" class="text-lg font-medium text-gray-700 text-left">Post Name<span class="text-red-400 text-base font-medium">*</span></label>
+                            <label for="post_name" class="text-lg font-medium text-gray-700 text-left">{{ $t('post_add.post_name') }}<span class="text-red-400 text-base font-medium">*</span></label>
                             <input 
                                 type="text" 
                                 v-model="form.name" 
                                 id="post_name" 
                                 class="mt-2 p-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" 
-                                placeholder="Tech Enthusiast Blog" 
+                                :placeholder="$t('post_add.post_name_placeholder')" 
                             />
                             <div v-if="props.errors?.[index]?.name" class="text-red-500 text-sm mt-2">
-                                {{ props.errors[index].name }}
+                                {{ $t('post_add.errors.name') }}
                             </div>
                         </div>
 
                         <div class="w-full md:w-1/2">
-                            <label for="description" class="text-lg font-medium text-gray-700 text-left">Post Description<span class="text-red-400 text-base font-medium">*</span></label>
+                            <label for="description" class="text-lg font-medium text-gray-700 text-left">{{ $t('post_add.post_description') }}<span class="text-red-400 text-base font-medium">*</span></label>
                             <input 
                                 type="text" 
                                 v-model="form.description" 
                                 id="description" 
                                 class="mt-2 p-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" 
-                                placeholder="Sharing my thoughts on the latest tech trends"
+                                :placeholder="$t('post_add.post_description_placeholder')"
                             />
                             <div v-if="props.errors?.[index]?.description" class="text-red-500 text-sm mt-2">
-                                {{ props.errors[index].description }}
+                                {{ $t('post_add.errors.description') }}
                             </div>
                         </div>
                     </div>
 
                     <div class="">
-                        <label for="tags" class="block text-lg font-medium text-gray-700 text-left">Tags<span class="text-red-400 text-base font-medium">*</span></label>
+                        <label for="tags" class="block text-lg font-medium text-gray-700 text-left">{{ $t('post_add.tags') }}<span class="text-red-400 text-base font-medium">*</span></label>
                         <Multiselect
                             id="multiselect"
                             v-model="form.tags"
@@ -161,7 +161,7 @@ onMounted(fetchTags);
                             </template>
                         </Multiselect>
                         <div v-if="props.errors?.[index]?.tags" class="text-red-500 text-sm mt-2">
-                            {{ props.errors[index].tags }}
+                            {{ $t('post_add.errors.tags') }}
                         </div>
                     </div>
 
@@ -198,7 +198,7 @@ onMounted(fetchTags);
                     </div> -->
 
                     <div class="w-full mt-4 text-left">
-                        <button type="button" @click="handleRemove(index)" class="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 focus:outline-none text-sm">Remove</button>
+                        <button type="button" @click="handleRemove(index)" class="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 focus:outline-none text-sm">{{ $t('post_add.remove_button') }}</button>
                     </div>
 
                 </div>

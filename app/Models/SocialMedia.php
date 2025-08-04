@@ -15,7 +15,7 @@ class SocialMedia extends Model
         'platform',
         'url',
         'location',
-        'data'
+        'date'
     ];
 
     public function posts() {

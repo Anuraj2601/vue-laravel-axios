@@ -1,8 +1,8 @@
 <template>
         <div class="title text-center mb-6">
-            <h2 class="text-2xl font-semibold">My Posts</h2>
+            <h2 class="text-2xl font-semibold">{{ $t('posts_s.title') }}</h2>
         </div>
-        <div class="tabs-container mb-6 ml-16">
+        <!-- <div class="tabs-container mb-6 ml-16">
             <div class="flex space-x-4">
                 <button 
                     v-for="(social, index) in socialMediaTypes" 
@@ -17,12 +17,58 @@
                     {{ social.platform }}
                 </button>
             </div>
-        </div>
+        </div> -->
+        <!-- <div class="flex justify-end">
+            <button class="bg-stone-800 text-white mr-32 px-2 py-2 rounded-lg hover:bg-black-400 focus:outline-none focus:ring-2 focus:ring-black-500 flex items-center space-x-2"
+                @click="addPost(selectedTab,selectedPlatform)"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+            </button>
+        </div> -->
 
+                <div class="overflow-x-auto mr-10 ml-6">
+                    <div class="list-container">
+                      <div class="flex items-center text-left font-semibold text-gray-800 mt-6 gap-4 px-10">
+                        <span class="flex-1 text-sm">{{ $t('posts_s.platform') }}</span>
+                        <!-- <span class="flex-1 text-sm">URL</span> -->
+                        <span class="flex-1 text-sm">{{ $t('posts_s.location') }}</span>
+                        <span class="flex-1 text-sm">{{ $t('posts_s.date') }}</span>
+                        <span class="text-sm w-auto">{{ $t('posts_s.action') }}</span>
+                      </div>
+                        <ul class="w-full bg-white-100 p-4 space-y-2 rounded-lg">
+                          <li 
+                            v-for="(social, index) in socialMediaTypes" 
+                            :key="index"
+                            :class="{
+                              /* 'bg-blue-100 text-blue-600': selectedTab === social.id,
+                              'text-gray-600 hover:text-blue-100 hover:bg-blue-600': selectedTab !== social.id */
+                            }"
+                            class="list-item py-2 px-6 cursor-pointer text-left text-gray-800 bg-gray-100 flex justify-between items-center border-b-2 border-gray-200 rounded-lg"
+                            @click="selectTab(social.id, social.platform)"
+                          >
+                            <div class="flex items-center text-left mt-2 gap-4">
+                              <span class="flex-1 text-lg text-black truncate">{{ social.platform }}</span>
+                              <!-- <span class="flex-1 text-sm text-gray-500 truncate">{{ social.url }}</span> -->
+                              <span class="flex-1 text-sm text-gray-500 truncate">{{ social.location }}</span>
+                              <span class="flex-1 text-sm text-gray-500 truncate">{{ social.date }}</span>
+                                <button 
+                                class="bg-yellow-500 text-white p-2 rounded-md hover:bg-yellow-400 text-sm flex items-center space-x-2"
+                                @click="editPost(social.id,social.platform)"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                  </svg>
+                                {{ $t('posts_s.edit') }}
+                              </button>
+                            </div>
+                          </li>
+                        </ul>
+                    </div>
+                </div>
 
-
-
-            <div class="title flex justify-between items-center mb-6">
+            <!-- <div class="title flex justify-between items-center mb-6">
                 <div class="flex justify-between">
                 <button
                     class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 flex items-center space-x-2"
@@ -43,9 +89,9 @@
                     placeholder="Search posts by name or description..."
                     />
                 </div>
-            </div>
+            </div> -->
 
-            <div class="overflow-x-auto ml-15 mr-15">
+             <div class="overflow-x-auto ml-15 mr-15">
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div v-for="(post, index) in posts" :key="post.id" class="bg-white shadow-lg rounded-lg p-4 h-full flex flex-col justify-between" v-if="!loading">
                             <div>
@@ -83,7 +129,7 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                     </svg>
-                                    Delete
+                                    {{ $t('posts_s.delete') }}
                                 </button>
                             </div>
                         </div>
@@ -92,7 +138,7 @@
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 animate-spin">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                             </svg>
-                            <div class="text-base">Processing....</div>
+                            <div class="text-base">{{ $t('posts_s.processing') }}</div>
                             </button>
                         </div>
                     </div>
@@ -138,7 +184,7 @@
         </nav>
       </div>
 
-      <WarningModal
+      <!-- <WarningModal
         :show="showWarning"
         title="Delete Post"
         message="Are you sure, you want to delete this post? This cannot be undone."
@@ -146,7 +192,7 @@
         @confirm="deletePost"
       >
 
-      </WarningModal>
+      </WarningModal> -->
 
         <TransitionRoot as="template" :show="edit">
             <Dialog class="relative z-10">
@@ -179,7 +225,7 @@
                     class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 w-full sm:max-w-lg"
                     >
                     
-                    <Edit :socialMediaId="selectedSocialMediaId" :platformName="selectedSocialMediaName" @close="closeEdit" @updated="fetchPosts" />
+                    <Edit :socialMediaId="selectedSocialMediaId" :showEdit="showEditForm" :showUserEdit="showUserEditForm" :platformName="selectedSocialMediaName" @close="closeEdit" @updated="fetchSocialMedia" />
                     
                     </DialogPanel>
                 </TransitionChild>
@@ -202,6 +248,7 @@ const posts = ref([]);
 const currentPage = ref(1);
 const searchQuery = ref('');
 const totalPages = ref(1);
+const totalSocialMedia = ref(0);
 const totalPosts = ref(0);
 const open = ref(false);
 const edit = ref(false);
@@ -213,6 +260,8 @@ const selectedSocialMediaName = ref(null);
 const socialMediaTypes = ref([]);
 const selectedTab = ref(1);
 const selectedPlatform = ref("Facebook");
+const showEditForm = ref(false);
+const showUserEditForm = ref(false);
 
 function openModal() {
   open.value = true
@@ -230,6 +279,8 @@ function editPost(id,name) {
     selectedSocialMediaId.value = id;
     selectedSocialMediaName.value = name;
     edit.value = true;
+    showEditForm.value = true;
+    showUserEditForm.value = true;
 }
 
 const selectTab = (platformId,platform) => {
@@ -246,14 +297,17 @@ const axiosInstance = axios.create({
     }
 });
 
+//Fetch only user posts related social media list
 const fetchSocialMedia = async () => {
     try {
-         const response = await axios.get('api/posts/create', {
+         const response = await axios.get(`api/social-media?page=${currentPage.value}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         });
-        socialMediaTypes.value = response.data.socialMedia;
+        socialMediaTypes.value = response.data.socialmedia;
+        totalSocialMedia.value = response.data.total;
+        totalPages.value = response.data.last_page;
     } catch (error) {
         console.error('Unable to fetch Social media', error);
     }
@@ -277,7 +331,7 @@ const fetchPosts = async () => {
 const changePage = (page) => {
     if(page > 0 && page <= totalPages.value) {
         currentPage.value = page;
-        fetchPosts();
+        fetchSocialMedia();
     }
 }
 
@@ -286,10 +340,10 @@ function confirmDelete(id) {
     showWarning.value = true;
 }
 
-const deletePost = async () => {
+/* const deletePost = async () => {
     try {
-        showWarning.value = false;
-        const response = await axiosInstance.delete(`/api/posts/delete/${postToDelete.value}`);
+              showWarning.value = false;
+        const response          = await axiosInstance.delete(`/api/posts/delete/${postToDelete.value}`);
 
         if(response.data.status == 'success') {
            fetchPosts();
@@ -297,11 +351,11 @@ const deletePost = async () => {
     } catch (error) {
         console.error("Delete post Error" , error)
     }
-}
+} */
 
 onMounted(async () => {
   await fetchSocialMedia();
-  fetchPosts();
+  /* fetchPosts(); */
 });
 
 </script>
@@ -341,7 +395,7 @@ onMounted(async () => {
     display: flex;
     justify-content:space-between;
     margin-top: 20px;
-    margin-left: 60px;
+    margin-left: 40px;
     margin-right: 120px;
     text-align: left;
     font-size: small;

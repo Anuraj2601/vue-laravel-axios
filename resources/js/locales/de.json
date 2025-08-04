@@ -1,0 +1,330 @@
+{
+  "dashboard": "Instrumententafel",
+  "posts": "Beiträge",
+  "my_posts": "Meine Beiträge",
+  "users": "Benutzer",
+  "roles": "Rollen",
+  "permissions": "Berechtigungen",
+   "navbar": {
+    "userPosts": "Benutzerbeiträge",
+    "profile": "Profil",
+    "logout": "Abmelden",
+    "language": "Sprache"
+  },
+  "dashboard_s": {
+    "greeting": "Hallo, {name}! 😍",
+    "totalUsers": "Gesamtanzahl Benutzer",
+    "totalPosts": "Gesamtanzahl Beiträge",
+    "yourPosts": "Deine Beiträge",
+    "totalSocial": "Gesamtanzahl Soziale Medien"
+  },
+  "roles_s": {
+    "title": "Rollenliste",
+    "addRole": "Rolle hinzufügen",
+    "deleteRoleTitle": "Rolle löschen",
+    "deleteRoleMessage": "Sind Sie sicher, dass Sie diese Rolle löschen möchten? Dies kann nicht rückgängig gemacht werden.",
+    "name": "Name",
+    "permissions": "Berechtigungen",
+    "actions": "Aktionen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "processing": "Verarbeitung..."
+  },
+  "permissions_s": {
+    "title": "Berechtigungsliste",
+    "add": "Berechtigung hinzufügen",
+    "deleteTitle": "Berechtigung löschen",
+    "deleteMessage": "Sind Sie sicher, dass Sie diese Berechtigung löschen möchten? Dies kann nicht rückgängig gemacht werden.",
+    "name": "Name",
+    "actions": "Aktionen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "processing": "Verarbeitung..."
+  },
+  "users_s": {
+    "title": "Benutzerliste",
+    "add": "Benutzer hinzufügen",
+    "deleteTitle": "Benutzer löschen",
+    "deleteMessage": "Sind Sie sicher, dass Sie diesen Benutzer löschen möchten? Dies kann nicht rückgängig gemacht werden.",
+    "name": "Name",
+    "email": "E-Mail",
+    "roles": "Rollen",
+    "actions": "Aktion",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "processing": "Verarbeitung..."
+  },
+  "posts_s": {
+    "title": "Meine Beiträge",
+    "platform": "Plattform",
+    "location": "Standort",
+    "date": "Datum",
+    "action": "Aktion",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "description": "Beschreibung",
+    "tags": "Stichworte",
+    "socialMedia": "Soziale Medien",
+    "processing": "Wird verarbeitet...",
+    "searchPlaceholder": "Beiträge nach Name oder Beschreibung suchen...",
+    "deleteConfirm": "Löschen",
+    "deletePost": "Sind Sie sicher, dass Sie diesen Beitrag löschen möchten?",
+    "pagination": {
+      "previous": "Zurück",
+      "next": "Weiter"
+    }
+  },
+  "social_s": {
+    "title": "Liste der sozialen Medien",
+    "add": "Soziale Medien hinzufügen",
+    "platform": "Plattform",
+    "location": "Standort",
+    "date": "Datum",
+    "action": "Aktion",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "processing": "Wird verarbeitet...",
+    "pagination": {
+      "previous": "Zurück",
+      "next": "Weiter"
+    }
+  },
+  "permission_add": {
+    "title": "Berechtigungsname",
+    "placeholder": "benutzer_erstellen",
+    "error_required": "Berechtigungsname ist erforderlich",
+    "success_title": "Rolle erfolgreich erstellt",
+    "success_message": "Neue Rolle wurde gespeichert",
+    "remove_button": "Entfernen"
+  },
+  "permission_edit": {
+    "create_title": "Berechtigungen erstellen",
+    "edit_title": "Berechtigungen bearbeiten",
+    "success_create_title": "Berechtigung erfolgreich erstellt",
+    "success_create_message": "Neue Berechtigung wurde gespeichert",
+    "success_update_title": "Berechtigung erfolgreich aktualisiert",
+    "success_update_message": "Berechtigung wurde aktualisiert",
+    "form": {
+      "label_name": "Berechtigungsname",
+      "placeholder_name": "create_user",
+      "required": "*",
+      "error_name_required": "Berechtigungsname ist erforderlich"
+    },
+    "buttons": {
+      "submit": "Einreichen",
+      "edit": "Berechtigung bearbeiten",
+      "cancel": "Abbrechen"
+    },
+    "empty": {
+      "message": "Keine Berechtigungen verfügbar"
+    },
+    "loading": {
+      "processing": "Verarbeitung...."
+    }
+  },
+  "role_add": {
+    "title": "Rolle erstellen",
+    "success_modal": {
+      "title": "Rolle erfolgreich erstellt",
+      "message": "Neue Rolle wurde gespeichert"
+    },
+    "form": {
+      "name_label": "Rollenname",
+      "name_placeholder": "Benutzer",
+      "permissions_label": "Berechtigungen"
+    },
+    "errors": {
+      "name": "Rollenname ist erforderlich.",
+      "permissions": "Mindestens eine Berechtigung muss ausgewählt werden."
+    }
+  },
+  "roles_edit": {
+    "create_title": "Rollen erstellen",
+    "edit_title": "Rollen bearbeiten",
+    "success_create": {
+      "title": "Rolle erfolgreich erstellt",
+      "message": "Neue Rolle wurde gespeichert"
+    },
+    "success_update": {
+      "title": "Rolle erfolgreich aktualisiert",
+      "message": "Rolle wurde aktualisiert"
+    },
+    "warning": {
+      "title": "Rolle löschen",
+      "message": "Sind Sie sicher, dass Sie diese Rolle löschen möchten? Dies kann nicht rückgängig gemacht werden."
+    },
+    "form": {
+      "name_label": "Rollenname",
+      "name_placeholder": "Rollenname",
+      "permissions_label": "Berechtigungen",
+      "submit": "Einreichen",
+      "edit": "Rolle bearbeiten",
+      "no_roles": "Keine Rollen verfügbar",
+      "processing": "Wird bearbeitet..."
+    },
+    "errors": {
+      "name": "Rollenname ist erforderlich.",
+      "permissions": "Mindestens eine Berechtigung muss ausgewählt werden."
+    }
+  },
+  "user_add": {
+    "success": {
+      "title": "Benutzer erfolgreich erstellt",
+      "message": "Neuer Benutzer wurde gespeichert"
+    },
+    "form": {
+      "name_label": "Name",
+      "name_placeholder": "Name",
+      "email_label": "E-Mail",
+      "email_placeholder": "E-Mail",
+      "role_label": "Rolle",
+      "password_label": "Passwort",
+      "password_placeholder": "Passwort",
+      "password_confirmation_label": "Passwort bestätigen",
+      "password_confirmation_placeholder": "Passwort bestätigen"
+    },
+    "errors": {
+      "name": "Name ist erforderlich.",
+      "email": "Eine gültige E-Mail ist erforderlich.",
+      "user_role": "Rollenwahl ist erforderlich.",
+      "password": "Passwort ist erforderlich.",
+      "password_confirmation": "Passwortbestätigung stimmt nicht überein."
+    }
+  },
+  "user_manage": {
+    "title": "Benutzer verwalten",
+    "create_title": "Benutzer erstellen",
+    "edit_title": "Benutzer bearbeiten",
+    "form": {
+      "name_label": "Name",
+      "name_placeholder": "Name",
+      "email_label": "E-Mail",
+      "email_placeholder": "E-Mail",
+      "role_label": "Rolle",
+      "submit_button": "Einreichen",
+      "update_button": "Benutzer aktualisieren"
+    },
+    "errors": {
+      "name": "Name ist erforderlich.",
+      "email": "Eine gültige E-Mail ist erforderlich.",
+      "user_role": "Benutzerrolle ist erforderlich."
+    },
+    "buttons": {
+      "cancel": "Abbrechen"
+    }
+  },
+  "social_add": {
+    "name_label": "Name",
+    "name_placeholder": "Z. B.: WhatsApp",
+    "name_required": "Name ist erforderlich.",
+    
+    "location_label": "Standort",
+    "location_placeholder": "Z. B.: Vereinigte Staaten",
+    "location_required": "Standort ist erforderlich.",
+    
+    "date_label": "Datum",
+    "date_placeholder": "Datum auswählen",
+    "date_required": "Datum ist erforderlich.",
+
+    "success_title": "Beitrag erfolgreich erstellt",
+    "success_message": "Ihr neuer Beitrag wurde gespeichert"
+  },
+  "social_edit": {
+    "title": "Soziales Medium hinzufügen",
+    "placeholder": {
+      "platform": "z. B.: Whatsapp",
+      "location": "z. B.: Vereinigte Staaten",
+      "date": "Datum auswählen"
+    },
+    "label": {
+      "platform": "Name",
+      "location": "Standort",
+      "date": "Datum"
+    },
+    "error": {
+      "platform": "Name der Plattform ist erforderlich",
+      "location": "Standort ist erforderlich",
+      "date": "Gültiges Datum ist erforderlich"
+    },
+    "success": {
+      "title": "Beitrag erfolgreich erstellt",
+      "message": "Ihr neuer Beitrag wurde gespeichert"
+    }
+  },
+  "post_add": {
+    "title": "Beitrag erstellen",
+    "post_name": "Beitragstitel",
+    "post_name_placeholder": "Technik-Enthusiasten-Blog",
+    "post_description": "Beitragsbeschreibung",
+    "post_description_placeholder": "Ich teile meine Gedanken zu den neuesten Technologietrends",
+    "tags": "Tags",
+    "remove_button": "Entfernen",
+    "errors": {
+        "name": "Der Beitragstitel ist erforderlich.",
+        "description": "Die Beitragsbeschreibung ist erforderlich.",
+        "tags": "Mindestens ein Tag ist erforderlich."
+        }
+    },
+    "post_edit": {
+    "title_create": "Soziale Medien erstellen",
+    "title_manage": "{platform} Beiträge verwalten",
+    "title_edit_posts": "Beiträge bearbeiten",
+    "form": {
+        "name": "Beitragstitel",
+        "name_placeholder": "Beitragstitel {id}",
+        "description": "Beitragsbeschreibung",
+        "description_placeholder": "Beitragsbeschreibung {id}",
+        "tags": "Tags",
+        "tags_placeholder": "Tags auswählen"
+    },
+    "modal": {
+        "create_title": "Soziales Medium erfolgreich erstellt",
+        "create_message": "Ihr neues soziales Medium wurde gespeichert",
+        "update_title": "Soziales Medium erfolgreich aktualisiert",
+        "update_message": "Ihr soziales Medium wurde aktualisiert",
+        "delete_title": "Beitrag löschen",
+        "delete_message": "Sind Sie sicher, dass Sie diesen Beitrag löschen möchten? Dies kann nicht rückgängig gemacht werden."
+    },
+    "buttons": {
+        "submit": "Einreichen",
+        "remove": "Entfernen",
+        "cancel": "Abbrechen",
+        "add_post": "Beitrag hinzufügen"
+    },
+    "messages": {
+        "no_posts": "Keine Beiträge verfügbar",
+        "processing": "Verarbeitung..."
+    },
+    "errors": {
+        "name": "Beitragstitel ist erforderlich.",
+        "description": "Beitragsbeschreibung ist erforderlich.",
+        "tags": "Mindestens ein Tag ist erforderlich."
+    }
+    },
+    "manage_social_posts": "{platform}-Beiträge verwalten",
+    "create_social_media": "Social-Media-Beitrag erstellen",
+    "profile_edit": {
+    "title": "Profil bearbeiten",
+    "upload_photo": "Foto hochladen",
+    "labels": {
+      "name": "Name",
+      "email": "E-Mail",
+      "role": "Rolle"
+    },
+    "buttons": {
+      "cancel": "Abbrechen",
+      "save": "Änderungen speichern"
+    },
+    "errors": {
+      "image": "Bitte laden Sie ein gültiges Bild hoch.",
+      "name": "Name ist erforderlich.",
+      "email": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
+      "role": "Rolle ist erforderlich."
+    }
+  },
+  "common": {
+    "yes": "Ja",
+    "delete": "Löschen",
+    "cancel": "Abbrechen"
+  }
+}

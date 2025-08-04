@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\SocialMediaController;
@@ -25,13 +27,19 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('/register', [RegisterController::class, 'store']);
 Route::post('/login', [RegisterController::class, 'login']);
 
-Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+Route::middleware(['auth:sanctum', 'role:admin|superadmin'])->group(function () {
     Route::get('/create', [UserController::class, 'create'])->name('user.create');
     Route::post('/store', [UserController::class, 'store'])->name('user.store');
     Route::get('/edit/{id}', [UserController::class, 'edit'])->name('user.edit');
     Route::put('/update/{id}', [UserController::class, 'update'])->name('user.update');
     Route::delete('/delete/{id}', [UserController::class, 'destory'])->name('user.destroy');
     Route::get('/', [UserController::class, 'index'])->name('user.index');
+    Route::get('/posts/all', [PostController::class, 'index'])->name('post.show');
+
+    Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
+    Route::get('role/{id}', [RoleController::class, 'show'])->name('role.show');
+    Route::get('permissions', [PermissionController::class, 'index'])->name('permission.index');
+    Route::get('permission/{id}', [PermissionController::class, 'getPermissionById'])->name('permission.show');
 });
 
 Route::middleware(['auth:sanctum'])->group(function() {
@@ -43,7 +51,7 @@ Route::middleware(['auth:sanctum'])->group(function() {
     Route::put('/posts/update/{id}', [PostController::class, 'update'])->middleware(['permission:edit_post'])->name('post.update');
     Route::post('posts/update-all', [PostController::class, 'updateAll'])->name('posts.updates');
     Route::delete('/posts/delete/{id}', [PostController::class, 'destory'])->middleware('permission:delete_post')->name('post.destory');
-    Route::get('/posts/all', [PostController::class, 'index'])->middleware('role:admin')->name('post.show');
+    
     Route::get('/posts', [PostController::class, 'show'])->name('post.index');
 
     Route::post('/profile/update', [UserController::class, 'profileUpdate'])->name('profile.update');
@@ -51,7 +59,20 @@ Route::middleware(['auth:sanctum'])->group(function() {
     Route::get('/list', [UserController::class, 'getCount'])->name('profile.list');
 
     Route::get('/posts/socmed/{id}', [PostController::class, 'postbySoc'])->name('posts.soc');
+    Route::get('/posts/socmeduser/{id}', [SocialMediaController::class, 'SocPostsByUser'])->name('posts.socuser');
     Route::get('/social-media/{id}', [SocialMediaController::class, 'show'])->name('socialmedia.show');
+    Route::get('/social-media', [SocialMediaController::class,'fetchSocialMediaByUser'])->name('socialmedia');
     Route::post('/social-media/create', [SocialMediaController::class, 'storeWithPosts'])->name('socialmedia.store');
+    Route::post('/social-media/update', [SocialMediaController::class, 'updateWithPosts'])->name('socialmedia.updte');
+    Route::post('/social-media-user/update', [SocialMediaController::class, 'UpdateUserPosts'])->name('socialmediauser.update');
+
+    
+
+    Route::middleware(['role:superadmin'])->group(function () {
+        Route::post('/roles/create', [RoleController::class, 'storeOrUpdate'])->name('role.create');
+        Route::delete('/roles/delete/{id}', [RoleController::class, 'deleteRole'])->name('role.delete');
+        Route::post('/permissions/create', [PermissionController::class, 'storeWithUpdate'])->name('permissions.create');
+        Route::delete('/permissions/delete/{id}', [PermissionController::class, 'deletePermission'])->name('permissions.delete');
+    });
 });
 

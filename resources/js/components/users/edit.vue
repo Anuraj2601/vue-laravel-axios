@@ -1,41 +1,76 @@
 <template>
-        <div class="container mx-auto px-4 mt-10">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Edit User</h2>
-        <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <div class="w-full">
+            <div class="bg-white p-6 rounded-lg">
+            <div class="flex justify-between">
+                <h2 class="text-2xl font-semibold text-gray-800">{{ $t('user_manage.title') }}</h2>
+                <button
+                    type="button"
+                    class=" inline-flex justify-center rounded-md bg-red-600 px-2 py-2 text-sm font-semibold text-gray-100 hover:bg-red-800 sm:mt-0 sm:w-auto"
+                    @click="cancel"
+                    ref="cancelButtonRef"
+                    >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
             
-            <form @submit.prevent="updateUser">
+        <div class="mb-2">
+            <div class="border-t border-gray-300 mt-4 mb-2 flex justify-between"  v-if="!props.showEdit">
+                    <h2 class="text-2xl mt-2 font-semibold">{{ $t('user_manage.create_title') }}</h2>
+                    <!-- <button type="button" @click="addForm" class="btn btn-primary mb-4 px-2 py-2 mt-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none text-sm">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                      </svg>
+                    </button> -->
+            </div>
+            <Add :formsU="formsU" :errorsU="errorsU" @remove="removeForm" v-if="!props.showEdit" />
+
+            <div class="border-t border-gray-300 mt-4 mb-2 flex justify-between" v-if="props.showEdit">
+                <h2 class="text-2xl font-semibold">{{ $t('user_manage.edit_title') }}</h2>
+            </div>
+            <form @submit.prevent="updateUser" v-if="props.showEdit">
                 <div class="mb-4">
-                    <label for="name" class="block text-lg font-medium text-gray-700 text-left">Name</label>
-                    <input v-model="user.name" type="text" placeholder="Name" class="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
+                    <label for="name" class="block text-lg font-medium text-gray-700 text-left">{{ $t('user_manage.form.name_label') }}</label>
+                    <input v-model="user.name" type="text" :placeholder="$t('user_manage.form.name_placeholder')" class="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
                     <span v-if="errors.name" class="text-red-500 text-sm mt-2">
-                            {{ errors.name }}
+                            {{ $t('user_manage.errors.name') }}
                     </span>
                 </div>
                 <div class="mb-4">
-                    <label for="email" class="block text-lg font-medium text-gray-700 text-left">Email</label>
-                    <input v-model="user.email" type="email" placeholder="Email" class="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
+                    <label for="email" class="block text-lg font-medium text-gray-700 text-left">{{ $t('user_manage.form.email_label') }}</label>
+                    <input v-model="user.email" type="email" :placeholder="$t('user_manage.form.email_placeholder')" class="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
                     <span v-if="errors.email" class="text-red-500 text-sm mt-2">
-                            {{ errors.email }}
+                            {{ $t('user_manage.errors.email') }}
                     </span>
                 </div>
                 <div class="mb-4">
-                    <label for="role" class="block text-lg font-medium text-gray-700 text-left">Role</label>
+                    <label for="role" class="block text-lg font-medium text-gray-700 text-left">{{ $t('user_manage.form.role_label') }}</label>
                     <select v-model="user.user_role" class="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" id="role">
                         <option v-for="role in roles" :key="role.id" :value="role.name">{{ role.name }}</option>
                     </select>
                     <span v-if="errors.user_role" class="text-red-500 text-sm mt-2">
-                            {{ errors.user_role }}
+                            {{ $t('user_manage.errors.user_role') }}
                     </span>
                 </div>
                 
                 <div class="mt-6">
-            <button 
-              type="submit" 
-              class="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-              Update User
-            </button>
-          </div>
+                    <button 
+                        type="submit" 
+                        class="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                        {{$t('user_manage.form.update_button')}}
+                    </button>
+                </div>
             </form>
+            <div class="mt-6" v-if="!props.showEdit">
+                <button 
+                    type="submit" 
+                    @click="createUser"
+                    class="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                    {{ $t('user_manage.form.submit_button') }}
+                </button>
+            </div>
+            </div>
         </div>
     </div>
 </template>
@@ -44,13 +79,24 @@
     import { onMounted, ref } from 'vue';
     import axios from 'axios';
     import { useRoute, useRouter } from 'vue-router';
+import Add from './add.vue';
 
-    const emit = defineEmits(['updated']);
+    const emit = defineEmits(['updated', 'close']);
     const user = ref({
         name: '',
         email: '',
         id: '',
         user_role: '',
+    });
+
+    const errorsU = ref({});
+
+    const formsU = ref({
+        name: '', 
+        email: '',
+        user_role: '',
+        password: '',
+        password_confirmation: ''
     });
 
     const errors = ref({
@@ -69,8 +115,29 @@
         userId: {
             type: [String, Number],
             required: true,
+        },
+        showEdit: {
+            type: [Boolean],
+            required: true,
         }
     })
+
+    function cancel() {
+        emit('close');
+    }
+
+    /* function addForm() {
+    open.value= true;
+        formsU.value.push({
+            name: '', 
+            email: '',
+            user_role: ''
+        })
+    }
+
+    function removeForm(index) {
+        formsU.value.splice(index, 1);
+    } */
 
     const editUser = async () => {
         try {
@@ -85,6 +152,46 @@
             user.value.user_role = response.data.user_role[0];
         } catch (error) {
             console.error("Retrieve User details error" , error);
+        }
+    }
+
+    const fetchRoles = async() => {
+        try {
+            const response = await axios.get('api/roles', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            roles.value = response.data.roles;
+        } catch (error) {
+            
+        }
+    }
+
+    const createUser = async() => {
+        try {
+            const response = await axios.post('api/register', {
+                name: formsU.value.name,
+                email: formsU.value.email,
+                user_role: formsU.value.user_role,
+                password: formsU.value.password,
+                password_confirmation: formsU.value.password_confirmation
+            });
+            if(response.data.status == 'success') {
+                emit('close');
+                emit('updated');
+            }
+        } catch (error) {
+            if(error.response) {
+                if(error.response.status === 422) {
+                    const backendErrors = error.response.data.error;
+                    for (const field in backendErrors) {
+                        errorsU.value[field] = backendErrors[field];
+                    }
+                } else {
+                    console.error('Unexpected error: ', error);
+                }
+            }
         }
     }
     
@@ -102,6 +209,7 @@
             }
         );
             if(response.data.status == 'success') {
+                emit('close');
                 emit('updated')
             }
             console.log(response.data);
@@ -119,7 +227,15 @@
         }
     }
 
-    onMounted(editUser);
+    onMounted(async () => {
+        await fetchRoles();
+            if(props.showEdit) {
+                editUser();
+            } else {
+                fetchRoles();
+            }
+        }
+    );
 
 </script>
 

@@ -9,7 +9,9 @@ import AddPost from '../components/posts/add.vue';
 import EditPost from '../components/posts/edit.vue';
 import MyPosts from '../components/posts/mypost.vue';
 import Layout from '../components/layouts/Layout.vue';
+import roles from '../components/roles/roles.vue';
 import store from '../store';
+import Permissions from '../components/permissions/permissions.vue';
 
 const routes = [
   {
@@ -57,6 +59,16 @@ const routes = [
         component: MyPosts,
         meta: { requiresAuth: true },
       },
+      {
+        path: 'roles',
+        component: roles,
+        meta: { requiresAuth: true },
+      },
+      {
+        path: 'permissions',
+        component: Permissions,
+        meta: {requiredAuth: true},
+      }
     ],
   },
   {

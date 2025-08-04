@@ -14,15 +14,23 @@ class PostController extends Controller
 {
     /**
      * Create a post
+     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
 
      public function create() {
-        $tag = Tag::all();
-        $socialMedia = SocialMedia::all();
+        $tags = Tag::all();
+
+        $socialMediasQuery = SocialMedia::orderBy('id', 'desc');
+        $socialMediasPaginator = $socialMediasQuery->paginate(5);
+
         return response()->json([
-            'tags'     => $tag,
-            'socialMedia'=> $socialMedia
+            'status'        => 'success',
+            'tags'          => $tags,
+            'socialMedia'   => $socialMediasPaginator->items(),
+            'total'         => $socialMediasPaginator->total(),
+            'current_page'  => $socialMediasPaginator->currentPage(),
+            'last_page'     => $socialMediasPaginator->lastPage(),
         ]);
      }
 
@@ -266,16 +274,16 @@ class PostController extends Controller
      public function postbySoc($id) {
         try {
             $posts = SocialMedia::find($id)->posts;
-            if($posts->isEmpty()) {
-                return response()->json([
-                    'msg' => 'No posts found for this platform'
-                ],404);
-            }
             $posts->load('tags', 'socialMedia');
+
+            $postsWithUsernames = $posts->map(function($post) {
+                $post->username = $post->user ? $post->user->name : null;
+                return $post;
+            });
 
             return response()->json([
                 'msg' => 'success',
-                'posts'=> $posts,
+                'posts'=> $postsWithUsernames,
                 'tags' => Tag::all(),
                 'socialMedia'=> SocialMedia::all()
             ]);

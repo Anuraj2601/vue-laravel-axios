@@ -1,0 +1,330 @@
+{
+  "dashboard": "Dashboard",
+  "posts": "Posts",
+  "my_posts": "My Posts",
+  "users": "Users",
+  "roles": "Roles",
+  "permissions": "Permissions",
+  "navbar": {
+    "userPosts": "User Posts",
+    "profile": "Profile",
+    "logout": "Logout",
+    "language": "Language"
+  },
+  "dashboard_s": {
+    "greeting": "Hi, {name}! 😍",
+    "totalUsers": "Total Users",
+    "totalPosts": "Total Posts",
+    "yourPosts": "Your Posts",
+    "totalSocial": "Total Social Media"
+  },
+  "roles_s": {
+    "title": "Roles List",
+    "addRole": "Add Role",
+    "deleteRoleTitle": "Delete Role",
+    "deleteRoleMessage": "Are you sure, you want to delete this role? This cannot be undone.",
+    "name": "Name",
+    "permissions": "Permissions",
+    "actions": "Actions",
+    "edit": "Edit",
+    "delete": "Delete",
+    "processing": "Processing...."
+  },
+  "permissions_s": {
+    "title": "Permissions List",
+    "add": "Add Permission",
+    "deleteTitle": "Delete Permission",
+    "deleteMessage": "Are you sure, you want to delete this permission? This cannot be undone.",
+    "name": "Name",
+    "actions": "Actions",
+    "edit": "Edit",
+    "delete": "Delete",
+    "processing": "Processing...."
+  },
+  "users_s": {
+    "title": "Users List",
+    "add": "Add User",
+    "deleteTitle": "Delete User",
+    "deleteMessage": "Are you sure, you want to delete this user? This cannot be undone.",
+    "name": "Name",
+    "email": "Email",
+    "roles": "Roles",
+    "actions": "Action",
+    "edit": "Edit",
+    "delete": "Delete",
+    "processing": "Processing..."
+  },
+  "posts_s": {
+    "title": "My Posts",
+    "platform": "Platform",
+    "location": "Location",
+    "date": "Date",
+    "action": "Action",
+    "edit": "Edit",
+    "delete": "Delete",
+    "description": "Description",
+    "tags": "Tags",
+    "socialMedia": "Social Media",
+    "processing": "Processing...",
+    "searchPlaceholder": "Search posts by name or description...",
+    "deleteConfirm": "Delete",
+    "deletePost": "Are you sure you want to delete this post?",
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next"
+    }
+  },
+  "social_s": {
+    "title": "Social Media List",
+    "add": "Add Social Media",
+    "platform": "Platform",
+    "location": "Location",
+    "date": "Date",
+    "action": "Action",
+    "edit": "Edit",
+    "delete": "Delete",
+    "processing": "Processing...",
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next"
+    }
+  },
+  "permission_add": {
+    "title": "Permission Name",
+    "placeholder": "create_user",
+    "error_required": "Permission name is required",
+    "success_title": "Role Created Successfully",
+    "success_message": "New role has been saved",
+    "remove_button": "Remove"
+  },
+  "permission_edit": {
+    "create_title": "Create Permissions",
+    "edit_title": "Edit Permissions",
+    "success_create_title": "Permission Created Successfully",
+    "success_create_message": "New permission has been saved",
+    "success_update_title": "Permission Updated Successfully",
+    "success_update_message": "Permission has been updated",
+    "form": {
+      "label_name": "Permission Name",
+      "placeholder_name": "create_user",
+      "required": "*",
+      "error_name_required": "Permission name is required"
+    },
+    "buttons": {
+      "submit": "Submit",
+      "edit": "Edit Permission",
+      "cancel": "Cancel"
+    },
+    "empty": {
+      "message": "There is No Permissions Available"
+    },
+    "loading": {
+      "processing": "Processing...."
+    }
+  },
+  "role_add": {
+    "title": "Create Role",
+    "success_modal": {
+      "title": "Role Created Successfully",
+      "message": "New role has been saved"
+    },
+    "form": {
+      "name_label": "Role Name",
+      "name_placeholder": "User",
+      "permissions_label": "Permissions"
+    },
+    "errors": {
+      "name": "Role name is required.",
+      "permissions": "At least one permission must be selected."
+    }
+  },
+  "roles_edit": {
+    "create_title": "Create Roles",
+    "edit_title": "Edit Roles",
+    "success_create": {
+      "title": "Role Created Successfully",
+      "message": "New role has been saved"
+    },
+    "success_update": {
+      "title": "Role Updated Successfully",
+      "message": "Role has been updated"
+    },
+    "warning": {
+      "title": "Delete Role",
+      "message": "Are you sure, you want to delete this role? This cannot be undone."
+    },
+    "form": {
+      "name_label": "Role Name",
+      "name_placeholder": "Role Name",
+      "permissions_label": "Permissions",
+      "submit": "Submit",
+      "edit": "Edit Role",
+      "no_roles": "There are no roles available",
+      "processing": "Processing..."
+    },
+    "errors": {
+      "name": "Role name is required.",
+      "permissions": "At least one permission must be selected."
+    }
+  },
+  "user_add": {
+    "success": {
+      "title": "User Created Successfully",
+      "message": "New user has been saved"
+    },
+    "form": {
+      "name_label": "Name",
+      "name_placeholder": "Name",
+      "email_label": "Email",
+      "email_placeholder": "Email",
+      "role_label": "Role",
+      "password_label": "Password",
+      "password_placeholder": "Password",
+      "password_confirmation_label": "Password Confirmation",
+      "password_confirmation_placeholder": "Password Confirmation"
+    },
+    "errors": {
+      "name": "Name is required.",
+      "email": "Valid email is required.",
+      "user_role": "Role selection is required.",
+      "password": "Password is required.",
+      "password_confirmation": "Password confirmation does not match."
+    }
+  },
+  "user_manage": {
+    "title": "Manage Users",
+    "create_title": "Create Users",
+    "edit_title": "Edit Users",
+    "form": {
+      "name_label": "Name",
+      "name_placeholder": "Name",
+      "email_label": "Email",
+      "email_placeholder": "Email",
+      "role_label": "Role",
+      "submit_button": "Submit",
+      "update_button": "Update User"
+    },
+    "errors": {
+      "name": "Name is required.",
+      "email": "A valid email is required.",
+      "user_role": "User role is required."
+    },
+    "buttons": {
+      "cancel": "Cancel"
+    }
+  },
+  "social_add": {
+    "name_label": "Name",
+    "name_placeholder": "Ex: Whatsapp",
+    "name_required": "Name is required.",
+    
+    "location_label": "Location",
+    "location_placeholder": "Ex: United States",
+    "location_required": "Location is required.",
+    
+    "date_label": "Date",
+    "date_placeholder": "Select date",
+    "date_required": "Date is required.",
+
+    "success_title": "Post Created Successfully",
+    "success_message": "Your new post has been saved"
+  },
+  "social_edit": {
+    "title": "Add Social Media",
+    "placeholder": {
+      "platform": "Ex: Whatsapp",
+      "location": "Ex: United States",
+      "date": "Select date"
+    },
+    "label": {
+      "platform": "Name",
+      "location": "Location",
+      "date": "Date"
+    },
+    "error": {
+      "platform": "Platform name is required",
+      "location": "Location is required",
+      "date": "Valid date is required"
+    },
+    "success": {
+      "title": "Post Created Successfully",
+      "message": "Your new post has been saved"
+    }
+  },
+  "post_add": {
+    "title": "Create Post",
+    "post_name": "Post Name",
+    "post_name_placeholder": "Tech Enthusiast Blog",
+    "post_description": "Post Description",
+    "post_description_placeholder": "Sharing my thoughts on the latest tech trends",
+    "tags": "Tags",
+    "remove_button": "Remove",
+    "errors": {
+        "name": "Post name is required.",
+        "description": "Post description is required.",
+        "tags": "At least one tag is required."
+        }
+    },
+    "post_edit": {
+    "title_create": "Create Social Media",
+    "title_manage": "Manage {platform} Posts",
+    "title_edit_posts": "Edit Posts",
+    "form": {
+        "name": "Post Name",
+        "name_placeholder": "Post Name {id}",
+        "description": "Post Description",
+        "description_placeholder": "Post Description {id}",
+        "tags": "Tags",
+        "tags_placeholder": "Pick tags"
+    },
+    "modal": {
+        "create_title": "Social Media Created Successfully",
+        "create_message": "Your new social media has been saved",
+        "update_title": "Social Media Updated Successfully",
+        "update_message": "Your new social media has been updated",
+        "delete_title": "Delete Post",
+        "delete_message": "Are you sure you want to delete this post? This cannot be undone."
+    },
+    "buttons": {
+        "submit": "Submit",
+        "remove": "Remove",
+        "cancel": "Cancel",
+        "add_post": "Add Post"
+    },
+    "messages": {
+        "no_posts": "There are no posts available",
+        "processing": "Processing..."
+    },
+    "errors": {
+        "name": "Post name is required.",
+        "description": "Post description is required.",
+        "tags": "At least one tag is required."
+    }
+    },
+    "manage_social_posts": "Manage {platform} Posts",
+    "create_social_media": "Create Social Media Post",
+    "profile_edit": {
+    "title": "Edit Profile",
+    "upload_photo": "Upload a Photo",
+    "labels": {
+      "name": "Name",
+      "email": "Email",
+      "role": "Role"
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "save": "Save Changes"
+    },
+    "errors": {
+      "image": "Please upload a valid image.",
+      "name": "Name is required.",
+      "email": "Please enter a valid email address.",
+      "role": "Role is required."
+    }
+  },
+  "common": {
+    "yes": "Yes",
+    "delete": "Delete",
+    "cancel": "Cancel"
+  }
+}
