@@ -1,13 +1,17 @@
 <script setup>
 import axios from 'axios';
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import SuccessModal from '../modals/SuccessModal.vue';
 import { useStore } from 'vuex';
+import { useI18n } from 'vue-i18n';
+import { useField, useForm } from 'vee-validate';
 
 const tags = ref([]);
 const socialMedia = ref([]);
-
+const {t} = useI18n();
+import * as yup from 'yup';
 const token = localStorage.getItem('auth_token');
+const hydrated = ref(false);
 /* const store = useStore();
 
 const token = computed(() => store.getters['auth/token']); */
@@ -58,6 +62,38 @@ function cancel() {
   emit('close')
 }
 
+const { setFieldValue } = useForm({
+    validateOnInput: true,
+    validateOnMount: false,
+    validateOnModelUpdate: false,
+});
+
+const {
+    value: platform,
+    errorMessage: platformError
+} = useField('platform', yup.string().required(t('social_add.name_required')))
+
+const {
+  value: location,
+  errorMessage: locationError
+} = useField('location', yup.string().required(t('social_add.location_required')))
+
+const {
+  value: date,
+  errorMessage: dateError
+} = useField('date', yup.date().required(t('social_add.date_required'))
+        .test('is-today', t('social_add.date_must_be_today'), function (value) {
+        if (!value) return false;
+        const selected = new Date(value);
+        selected.setHours(0, 0, 0, 0);
+        return selected.getTime() === today_date.getTime();
+    })
+)
+
+const today_date = new Date();
+today_date.setHours(0, 0, 0, 0);
+
+
 const alert = ref({
     visible: false,
     message: '',
@@ -83,6 +119,27 @@ function showSuccessModal() {
     }, 1500)
 }
 
+watch(() => props.formsSoc1, (newVal) => {
+    if(!newVal) return;
+    setFieldValue('platform', newVal.platform, {force: false});
+    setFieldValue('location', newVal.location, {force: false});
+    setFieldValue('date', today.value, {force: false});
+    hydrated.value = true;
+}, { immediate: true });
+
+watch(platform, (newVal) => {
+  props.formsSoc1.platform = newVal;
+});
+
+watch(location, (newVal) => {
+  props.formsSoc1.location = newVal;
+});
+
+watch(date, (newVal) => {
+  props.formsSoc1.date = today;
+});
+
+
 onMounted(fetchTags);
 </script>
 
@@ -106,20 +163,23 @@ onMounted(fetchTags);
         </SuccessModal>
 
         <div class="rounded-lg">
-                <form class="space-y-6">
+                <form class="space-y-6" v-if="hydrated">
                     <!-- <input type="hidden" v-model="props.formsSoc1.id" /> -->
                     <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
                         <div class="w-full md:w-1/2">
                             <label for="social_media_name" class="text-lg font-medium text-gray-700 text-left">{{ $t('social_edit.label.platform') }}<span class="text-red-400 text-base font-medium">*</span></label>
                             <input 
                                 type="text" 
-                                v-model="props.formsSoc1.platform" 
+                                v-model="platform" 
                                 id="social_media_name" 
                                 class="mt-2 p-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" 
                                 :placeholder="$t('social_edit.placeholder.platform')" 
                             />
                             <div v-if="props.errorsSoc?.platform" class="text-red-500 text-sm mt-2">
-                                {{ $t('social_edit.error.platform') }}
+                                {{ props.errorsSoc.platform }}
+                            </div>
+                            <div v-else-if="platformError" class="text-red-500 text-sm mt-2">
+                                {{ platformError }}
                             </div>
                         </div>
 
@@ -127,13 +187,16 @@ onMounted(fetchTags);
                             <label for="location" class="text-lg font-medium text-gray-700 text-left">{{ $t('social_edit.label.location') }}<span class="text-red-400 text-base font-medium">*</span></label>
                             <input 
                                 type="text" 
-                                v-model="props.formsSoc1.location" 
+                                v-model="location" 
                                 id="location" 
                                 class="mt-2 p-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" 
                                 :placeholder="$t('social_edit.placeholder.location')"
                             />
                             <div v-if="props.errorsSoc?.location" class="text-red-500 text-sm mt-2">
-                                {{ $t('social_edit.error.location') }}
+                                {{ props.errorsSoc.location }}
+                            </div>
+                            <div v-else-if="locationError" class="text-red-500 text-sm mt-2">
+                                {{ locationError }}
                             </div>
                         </div>
                     </div>
@@ -143,7 +206,7 @@ onMounted(fetchTags);
                         <div class="text-left w-1/2">
                             <input 
                                 type="date" 
-                                v-model="props.formsSoc1.date" 
+                                v-model="date" 
                                 id="date" 
                                 class="mt-2 p-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
                                 placeholder="$t('social_edit.placeholder.date')"
@@ -151,8 +214,11 @@ onMounted(fetchTags);
                                 :max="today"
                             />
                             <div v-if="props.errorsSoc?.date" class="text-red-500 text-sm mt-2">
-                                {{ $t('social_edit.error.date') }}
+                                {{ props.errorsSoc.date }}
                             </div>
+                            <div v-else-if="dateError" class="text-red-500 text-sm mt-2">
+                            {{ dateError }}
+                        </div>
                         </div>
                     </div>
                 </form>

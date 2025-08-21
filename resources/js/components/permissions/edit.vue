@@ -1,18 +1,23 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import SuccessModal from '../modals/SuccessModal.vue';
 import axios from 'axios';
 import Multiselect from 'vue-multiselect';
 import Add from './add.vue';
+import i18n from '../../i18n';
+import { useStore } from 'vuex';
+import { useField, useForm } from 'vee-validate';
 const showSuccess = ref(false);
 const showWarning = ref(false);
 const showUpdate = ref(false);
 const emit = defineEmits(['updated']);
 const PName = ref('');
 const loading = ref(false);
-
+const store = useStore();
+import * as yup from 'yup';
+import { useI18n } from 'vue-i18n';
 const token = localStorage.getItem('auth_token');
-
+const {t} = useI18n();
 const props = defineProps({
     permissionId: {
         type: [String, Number],
@@ -44,6 +49,20 @@ const formsR = ref({
 function handlePermissionName(name) {
     PName.value = name;
 }
+
+useForm({
+    validateOnInput: true,
+});
+
+const {
+  value: name,
+  errorMessage: nameError
+} = useField('name', yup.string().required(t('permission_edit.form.error_name_required')))
+
+
+watch(name, (newVal) => {
+  formsR.name = newVal;
+});
 
 /* function addForm() {
   open.value= true;
@@ -88,10 +107,11 @@ const fetchPermissionById = async() => {
         loading.value = true;
         const res = await axios.get(`api/permission/${props.permissionId}`, {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                "Accept-Language": i18n.global.locale.value
             }
         });
-        formsR.value = res.data.permission;
+        name.value = res.data.permission.name;
         loading.value = false;
     } catch (error) {
         console.error('Unable to fetch Permission', error);
@@ -103,7 +123,8 @@ const fetchPermissions = async () => {
         loading.value = true;
         const res = await axios.get('api/permissions', {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                "Accept-Language": i18n.global.locale.value
             }
         });
         permissions.value = res.data.permissions;
@@ -121,7 +142,8 @@ const submitForAdd = async() => {
             forms: formsP.value,
         }, {
             headers: {
-                "Authorization": `Bearer ${token}`
+                "Authorization": `Bearer ${token}`,
+                "Accept-Language": i18n.global.locale.value
             }
         });
         if(response.data.status == 'success') {
@@ -144,13 +166,18 @@ const submitForEdit = async() => {
 
     try {
         const response = await axios.post('api/permissions/create', {
-            permissions: formsR.value,
+            permissions: {
+                id: props.permissionId,
+                name: name.value
+            }
         }, {
             headers: {
-                "Authorization": `Bearer ${token}`
+                "Authorization": `Bearer ${token}`,
+                "Accept-Language": i18n.global.locale.value
             }
         });
         if(response.data.status == 'success') {
+            store.dispatch('auth/fetchUser');
             cancel();
             emit('updated');
             showSuccessModal();
@@ -279,13 +306,16 @@ onMounted(async () => {
                         <div class="w-full">
                             <label for="name" class="block text-lg font-medium text-gray-700 text-left">{{ $t('permission_edit.form.label_name') }}<span class="text-red-400 text-base font-medium">*</span></label>
                             <input 
-                                v-model="formsR.name" 
+                                v-model="name" 
                                 type="text" 
                                 :placeholder="$t('permission_edit.form.placeholder_name')" 
                                 class="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
                             />
                             <div v-if="errorsR?.name" class="text-red-500 text-sm mt-2">
-                                {{ $t('permission_edit.form.error_name_required') }}
+                                {{ errorsR.name }}
+                            </div>
+                            <div v-else-if="nameError" class="text-red-500 text-sm mt-2">
+                                {{ nameError }}
                             </div>
                         </div>
                     </div>
@@ -308,7 +338,7 @@ onMounted(async () => {
                 <button 
                     type="button" 
                     @click="submitForEdit"
-                    class="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    class="w-full py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm"
                     >
                     {{ $t('permission_edit.buttons.edit') }}
                 </button>

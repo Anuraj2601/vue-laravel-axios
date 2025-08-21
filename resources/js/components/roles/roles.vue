@@ -5,6 +5,7 @@ import { onMounted, ref } from 'vue';
 import Edit from './edit.vue';
 import { useStore } from 'vuex';
 import WarningModal from '../modals/WarningModal.vue';
+import i18n from '../../i18n';
 
 const rolesTypes = ref([]);
 const loading = ref(false);
@@ -16,21 +17,32 @@ const showWarning = ref(false);
 const selectedRoleId = ref('');
 const roleToDelete = ref(null);
 const selectedRoleName = ref('');
+const searchQuery = ref('');
+const currentPage = ref(1);
+const totalPages = ref(1);
+const totalRoles = ref(0);
+const permissionError  = ref('');
+const perPage = ref(7);
 
 const token = localStorage.getItem('auth_token');
 
 const fetchRoles = async () => {
     try {
         loading.value = true;
-        const res = await axios.get('api/roles', {
+        const res = await axios.get(`api/roles?page=${currentPage.value}&search=${searchQuery.value}&per_page=${perPage.value}`, {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                "Accept-Language": i18n.global.locale.value
             }
         });
         rolesTypes.value = res.data.roles;
-
+        totalRoles.value = res.data.total;
+        totalPages.value = res.data.last_page;
         loading.value = false;
     } catch (error) {
+        if (error.response.status === 403) {
+              permissionError.value = error.response.data.message;
+        }
         console.error('Unable to fetch roles', error);
     }
 }
@@ -63,7 +75,8 @@ const deleteRole = async() => {
         showWarning.value = false;
         const res = await axios.delete(`api/roles/delete/${roleToDelete.value}`, {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                "Accept-Language": i18n.global.locale.value
             }
         });
         if(res.data.status == 'success') {
@@ -78,6 +91,13 @@ function closeEdit() {
     edit.value = false;
 }
 
+const changePage = (page) => {
+  if (page > 0 && page <= totalPages.value) {
+    currentPage.value = page;
+    fetchRoles();
+  }
+}
+
 onMounted(fetchRoles);
 </script>
 
@@ -86,7 +106,7 @@ onMounted(fetchRoles);
         <h2 class="text-2xl font-semibold">{{ $t('roles_s.title') }}</h2>
     </div>
 
-    <div class="title flex justify-between items-center" v-if="hasRole('superadmin')">
+    <div class="title flex justify-between items-center" v-if="hasPermission('create_role')">
         <button 
             class="bg-gray-200 text-black mr-32 px-2 py-2 rounded-lg focus:outline-none hover:bg-gray-800 hover:text-gray-100 focus:ring-2 focus:ring-black-500 flex items-center space-x-2"
             @click="addRole()"
@@ -96,6 +116,28 @@ onMounted(fetchRoles);
             </svg>
                 {{ $t('roles_s.addRole') }}
         </button>
+        <div class="space-x-1">
+            <select 
+                    v-model="perPage" 
+                    @change="fetchRoles(1)"
+                    class="mt-2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                    <option v-for="n in [5, 6, 7, 8]" :key="n" :value="n">
+                        {{ n }} rows
+                    </option>
+                </select>
+            <input 
+                v-model="searchQuery" 
+                @input="fetchRoles(1)" 
+                type="text" 
+                class="mt-2 w-65 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                :placeholder="$t('placeholders.search_roles')"
+            />
+        </div>
+    </div>
+
+    <div v-if="permissionError" class="text-red-600 text-sm ml-6 my-2">
+        {{ permissionError }}
     </div>
 
     <WarningModal
@@ -132,6 +174,7 @@ onMounted(fetchRoles);
                     </span>
                     <div class="flex space-x-2">
                         <button
+                            v-if="hasPermission('edit_role')"
                             @click.stop="editRole(role.id)"
                             class="bg-yellow-500 text-white px-3 py-1 rounded-md hover:bg-yellow-400 text-sm flex items-center"
                         >
@@ -144,6 +187,7 @@ onMounted(fetchRoles);
                                 {{ $t('roles_s.edit') }}
                         </button>
                         <button
+                            v-if="hasPermission('delete_role')"
                             @click.stop="confirmDelete(role.id)"
                             class="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-400 text-sm flex items-center"
                         >
@@ -196,8 +240,8 @@ onMounted(fetchRoles);
                         leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                     >
                         <DialogPanel
-                                class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all
-                                sm:my-8 w-full sm:max-w-2xl h-auto"
+                                class="relative transform rounded-lg bg-white text-left shadow-xl transition-all
+                                       sm:my-8 w-full sm:max-w-2xl h-auto"
                         >
                     
                             <Edit :roleId="selectedRoleId" :showEdit="showEditForm" :roleName="selectedRoleName" @close="closeEdit" @updated="fetchRoles" /> 
@@ -208,16 +252,57 @@ onMounted(fetchRoles);
             </div>
         </Dialog>
     </TransitionRoot>
+
+    <div class="mt-2">
+                    <nav aria-label="Page navigation example">
+                    <ul class="flex justify-center space-x-2">
+                        <li class="page-item" :class="{ 'opacity-50 cursor-not-allowed': currentPage === 1 }">
+                        <a 
+                            class="page-link inline-flex items-center px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200"
+                            href="#" 
+                            aria-label="Previous" 
+                            @click.prevent="changePage(currentPage - 1)">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                        </li>
+
+                        <li 
+                        v-for="pageNumber in totalPages" 
+                        :key="pageNumber"
+                        
+                        class="page-item">
+                        <a 
+                            :class="{ 'bg-blue-500 rounded-md text-white': pageNumber === currentPage, 'text-gray-700': pageNumber !== currentPage }"
+                            class="page-link inline-flex items-center px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-200 hover:text-black "
+                            href="#" 
+                            @click.prevent="changePage(pageNumber)">
+                            {{ pageNumber }}
+                        </a>
+                        </li>
+
+                        <li class="page-item" :class="{ 'opacity-50 cursor-not-allowed': currentPage === totalPages }">
+                        <a 
+                            class="page-link inline-flex items-center px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200"
+                            href="#" 
+                            aria-label="Next" 
+                            @click.prevent="changePage(currentPage + 1)">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
 </template>
 
 <style scoped>
 .title {
     display: flex;
-    justify-content:space-between;
+    /* justify-content:space-between; */
     margin-top: 20px;
     margin-left: 40px;
-    margin-right: 120px;
+    margin-right: 60px;
     text-align: left;
     font-size: small;
 }
+
 </style>

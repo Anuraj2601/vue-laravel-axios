@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreSocialMediaRequest;
+use App\Http\Requests\StoreSocialMediaWithPostsRequest;
 use App\Http\Requests\UpdateSocialMediaRequest;
 use App\Http\Requests\UserPostsUpdateRequest;
 use App\Models\Post;
@@ -24,7 +25,7 @@ class SocialMediaController extends Controller
 
     public function show($id) {
         try {
-                $socialMedia = SocialMedia::findOrFail($id);
+                $socialMedia = SocialMedia::find($id);
 
                 if (!$socialMedia) {
                     return response()->json(['error' => 'Social media not found'], 404);
@@ -145,6 +146,17 @@ class SocialMediaController extends Controller
                     $post->tags()->sync($tagIds);
                 }
             }
+
+            if (!empty($validated['deletedPostIds'])) {
+                foreach ($validated['deletedPostIds'] as $postId) {
+                    $post = Post::find($postId);
+                    if ($post) {
+                        $post->tags()->detach();
+                        $post->delete();
+                    }
+                }
+            }
+
             DB::commit();
 
             return response()->json([
@@ -169,12 +181,27 @@ class SocialMediaController extends Controller
     public function fetchSocialMediaByUser(Request $request) {
         try {
             $user = $request->user();
+            $perPage = $request->input('per_page', 7);
 
-            $socialMedias = SocialMedia::with(['posts' => function ($query) use ($user) {
+            $query = $socialMedia = SocialMedia::with(['posts' => function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             }])
-            ->orderBy('id', 'desc')
-            ->paginate(5);
+            ->orderBy('id', 'desc');
+
+            if($request->has('search') && $request->search != '') {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('platform', 'like', "%$search%")
+                    ->orWhere('location', 'like', "%$search%");
+                });
+            }
+
+            $socialMedias = $query->paginate($perPage)->withQueryString();
+
+            if ($socialMedias->currentPage() > $socialMedias->lastPage() && $socialMedias->lastPage() > 0) {
+                $request->merge(['page' => $socialMedias->lastPage()]);
+                $socialMedias = $query->paginate($perPage)->withQueryString();
+            }
 
             return response()->json([
                 'socialmedia'   => $socialMedias->items(),
@@ -260,6 +287,16 @@ class SocialMediaController extends Controller
                 }
             }
 
+            if (!empty($validated['deletedPostIds'])) {
+                foreach ($validated['deletedPostIds'] as $postId) {
+                    $post = Post::find($postId);
+                    if ($post) {
+                        $post->tags()->detach();
+                        $post->delete();
+                    }
+                }
+            }
+
             DB::commit();
 
             return response()->json([
@@ -268,6 +305,164 @@ class SocialMediaController extends Controller
             ]);
         } catch (\Throwable $th) {
             DB::rollBack();
+            return response()->json([
+                'msg' => 'error',
+                'error' => $th->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Fetch SocialMedia Lists by created user
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function fetchByUser(Request $request) {
+        try {
+            /* Log::info('Incoming request from myposts', [
+                'user_id' => $request->user()->id,
+                'per_page' => $request->per_page ?? null,
+                'search' => $request->search ?? null
+            ]); */
+            $userId = $request->user()->id;
+            $perPage = $request->per_page ?? 10;
+            $search = $request->search ?? '';
+
+
+            $query = SocialMedia::with('posts')
+                    ->withMax(['posts as user_latest_post_created_at' => function($q) use ($userId) {
+                        $q->where('user_id', $userId);
+                    }], 'created_at')
+                    ->where(function ($q) use ($userId, $search) {
+                        $q->where(function ($q1) use ($userId) {
+                            $q1->where('user_id', $userId)
+                            ->orWhereHas('posts', function ($q2) use ($userId) {
+                                $q2->where('user_id', $userId);
+                            });
+                        });
+
+                        if (!empty($search)) {
+                            $q->where(function ($q3) use ($search) {
+                                $q3->where('platform', 'like', "%$search%")
+                                ->orWhere('location', 'like', "%$search%");
+                            });
+                        }
+                    })
+                    ->orderByRaw('COALESCE(user_latest_post_created_at, social_media.created_at) DESC');
+
+
+
+            $socialMedias = $query->paginate($perPage)->withQueryString();
+
+            if ($socialMedias->currentPage() > $socialMedias->lastPage() && $socialMedias->lastPage() > 0) {
+                $request->merge(['page' => $socialMedias->lastPage()]);
+                $socialMedias = $query->paginate($perPage)->withQueryString();
+            }
+
+            return response()->json([
+                'socialmedia' => $socialMedias->items(),
+                'total' => $socialMedias->total(),
+                'last_page' => $socialMedias->lastPage(),
+                'current_page' => $socialMedias->currentPage(),
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'msg' => 'error',
+                'error' => $th->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function storeUserSocialMediaWithPosts(StoreSocialMediaWithPostsRequest $request) {
+        try {
+            $user = $request->user();
+
+            $validated = $request->validated();
+
+            DB::beginTransaction();
+
+           $platformName = $validated['platform'][0]['platform'] ?? null;
+
+            $socialMedia = SocialMedia::where('platform', $platformName)->first();
+
+            if (!$socialMedia) {
+                $socialMedia = SocialMedia::create([
+                    'platform' => $platformName,
+                    'location' => $validated['location'],
+                    'date'     => $validated['date'],
+                    'user_id'  => $user->id,
+                ]);
+            }
+
+            
+            if (!empty($validated['forms'])) {
+                foreach ($validated['forms'] as $postData) {
+                    $post = $socialMedia->posts()->create([
+                        'name' => $postData['name'],
+                        'description' => $postData['description'],
+                        'user_id' => $user->id,
+                    ]);
+
+                    if (!empty($postData['tags'])) {
+                        $tagIds = collect($postData['tags'])->pluck('id')->toArray();
+                        $post->tags()->attach($tagIds);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'msg'    => 'Successfully created Social Media with Posts',
+                'status' => 'success',
+                'socialMedia' => $socialMedia->load('posts'),
+            ]);
+
+        } catch (\Exception $th) {
+            DB::rollBack();
+
+            Log::error('Error while creating SocialMedia with Posts: ' . $th->getMessage(), [
+                'error' => $th,
+                'request' => $request->all()
+            ]);
+
+            return response()->json([
+                'msg'   => 'An error occurred while creating the Social Media entry.',
+                'error' => $th->getMessage(),
+                'status' => 'error'
+            ]);
+        }
+    }
+
+    /**
+     * Delete Social Media
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function deleteSocialMedia(Request $request) {
+        $request->validate([
+            'social_media_id' => 'required|exists:social_media,id',
+        ]);
+        try {
+            DB::beginTransaction();
+
+            $socialMedia = SocialMedia::with('posts')->findOrFail($request->social_media_id);
+
+            $socialMedia->posts()->delete();
+
+            $socialMedia->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'msg' => 'Social media and related posts deleted successfully.',
+                'status' => 'success'
+            ]);
+        } catch (\Throwable $th) {
             return response()->json([
                 'msg' => 'error',
                 'error' => $th->getMessage()

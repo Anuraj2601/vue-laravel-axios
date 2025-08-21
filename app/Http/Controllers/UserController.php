@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
@@ -26,7 +27,7 @@ class UserController extends Controller
     /**
      * Store new user
      * @param \Illuminate\Http\Request $request
-     * @return void
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request) {
         $validated = $request->validate([
@@ -56,9 +57,23 @@ class UserController extends Controller
      */
 
     public function Edit($id) {
+        $authUser = auth()->user();
+
         $user = User::findOrFail($id);
 
-        $roles = Role::all();
+        if ($authUser->hasRole('admin')) {
+            if ($user->hasRole('admin') || $user->hasRole('superadmin')) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+            $roles = Role::where('name', 'user')->get();
+        } elseif ($authUser->hasRole('superadmin')) {
+            if ($user->hasRole('superadmin') && $user->id != $authUser->id) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+            $roles = Role::whereIn('name', ['user', 'admin'])->get();
+        } else {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
 
         return response()->json([
             'user' => $user,
@@ -76,8 +91,9 @@ class UserController extends Controller
        try {
          $validated = $request->validate([
             'name'  => 'required|string|max:50',
-            'email' => 'required|string|email',
-            'role'  => 'required|exists:roles,name'
+            'email' => 'required|string|email|unique:users,email,' . $id,
+            'role'  => 'required|exists:roles,name',
+            'password' => 'nullable|string|min:8|confirmed',
         ]);
 
         $users = User::findOrFail($id);
@@ -85,6 +101,7 @@ class UserController extends Controller
         $users->update([
             'name'  => $validated['name'],
             'email' => $validated['email'],
+            'password' => isset($validated['password']) ? bcrypt($validated['password']) : $users->password,
         ]);
 
         $users->syncRoles($validated['role']);
@@ -121,12 +138,41 @@ class UserController extends Controller
 
         return response()->json([
             'msg' => 'User Deleted Successfully',
-            'status'=> ' success'
+            'status'=> 'success'
         ]);
     }
 
-    public function index() {
-        $usersPaginator = User::with('roles')->paginate(5); // Adjust 10 as needed
+    public function index(Request $request) {
+        $perPage = $request->input('per_page', 7);
+        $authUser = auth()->user();
+        $query = User::with('roles')->where('id', '!=', $authUser->id); 
+
+            if ($authUser->hasRole('admin')) {
+                $query->whereHas('roles', function($q) {
+                    $q->where('name', 'user');
+                });
+            } elseif ($authUser->hasRole('superadmin')) {
+                $query->whereHas('roles', function($q) {
+                    $q->whereIn('name', ['user', 'admin']);
+                });
+            }
+                            
+        if($request->has('search') && $request->search != '') {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%$search%")
+                    ->orWhereHas('roles', function ($q2) use ($search) {
+                            $q2->where('name', 'like', "%$search%");
+                        });
+                });
+        }
+
+        $usersPaginator =  $query->paginate($perPage)->withQueryString();
+
+        if ($usersPaginator->currentPage() > $usersPaginator->lastPage() && $usersPaginator->lastPage() > 0) {
+                $request->merge(['page' => $usersPaginator->lastPage()]);
+                $usersPaginator = $query->paginate($perPage)->withQueryString();
+        }
 
         return response()->json([
             'msg' => 'User Details retrieved successfully',
@@ -241,13 +287,35 @@ class UserController extends Controller
         $totalpostCount = Post::count();
         $totalsocialCount = SocialMedia::count();
         $mypostCount = Post::where('user_id', $user->id)->count();
+        $totalRolesCount = Role::count();
+        $totalPermissionsCount = Permission::count();
+        $latestPosts = [];
+        $newUsers = [];
+
+        if($user->hasPermissionTo('view_latest_posts')) {
+            $latestPosts = Post::with('user:id,name,email')
+                        ->latest()
+                        ->take(5)
+                        ->get();
+        }
+
+        if($user->hasPermissionTo('view_latest_users')) {
+            $newUsers = User::select('id','name','email')
+                        ->latest()
+                        ->take(5)
+                        ->get();
+        }
 
         return response()->json([
             'msg' => 'data count fetch successfully',
             'user_count' => $userCount,
             'totalpost_count' => $totalpostCount,
             'mypost_count' => $mypostCount,
-            'socialCount' => $totalsocialCount
+            'socialCount' => $totalsocialCount,
+            'totalRoles' => $totalRolesCount,
+            'totalPermissions' => $totalPermissionsCount,
+            'latestPosts' => $latestPosts,
+            'newUsers' => $newUsers
         ]);
      }
 
@@ -264,6 +332,26 @@ class UserController extends Controller
             'user' => $user,
             'roles'=> $user->getRoleNames(),
             'permissions'=> $user->getAllPermissions()->pluck('name')
+        ]);
+     }
+
+    /**
+     * Update User Language
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+     public function updateLanguage(Request $request) {
+        $request->validate([
+            'language' => 'required|in:en,de'
+        ]);
+
+        $user = $request->user();
+        $user->language = $request->language;
+        $user->save();
+
+        return response()->json([
+            'status' => 'success',
+            'msg' => 'User Language Updated Successfully'
         ]);
      }
 }

@@ -13,9 +13,8 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('posts', function (Blueprint $table) {
-           /*  $table->unsignedBigInteger('social_media_id')->nullable();
-            $table->foreign('social_media_id')->references('id')->on('social_media')->onDelete('set null'); */
+        Schema::table('users', function (Blueprint $table) {
+            /* $table->string('language')->default('en')->after('email'); */
         });
     }
 
@@ -26,9 +25,8 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('posts', function (Blueprint $table) {
-            $table->dropForeign('social_media_id');
-            $table->dropColumn('social_media_id');
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn('language');
         });
     }
 };

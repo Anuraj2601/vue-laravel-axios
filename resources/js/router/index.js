@@ -12,6 +12,8 @@ import Layout from '../components/layouts/Layout.vue';
 import roles from '../components/roles/roles.vue';
 import store from '../store';
 import Permissions from '../components/permissions/permissions.vue';
+import ForgotPassword from '../components/ForgotPassword.vue';
+import ResetPassword from '../components/ResetPassword.vue';
 
 const routes = [
   {
@@ -37,7 +39,7 @@ const routes = [
       {
         path: 'posts',
         component: Posts,
-        meta: { requiresAuth: true},
+        meta: { requiresAuth: true, permission: 'manage_social_media'},
       },
       {
         path: 'edit-user/:id',
@@ -57,7 +59,7 @@ const routes = [
       {
         path: 'myposts',
         component: MyPosts,
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true, permission: 'manage_my_posts' },
       },
       {
         path: 'roles',
@@ -67,7 +69,7 @@ const routes = [
       {
         path: 'permissions',
         component: Permissions,
-        meta: {requiredAuth: true},
+        meta: {requiredAuth: true, permission: 'manage_permissions'},
       }
     ],
   },
@@ -79,6 +81,14 @@ const routes = [
     path: '/login',
     component: Login, 
   },
+  {
+    path: '/forgot-password',
+    component: ForgotPassword,
+  },
+  {
+    path: '/reset-password',
+    component: ResetPassword,
+  }
 ];
 
 const router = createRouter({

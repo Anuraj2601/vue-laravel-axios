@@ -30,7 +30,8 @@ class User extends Authenticatable
         'email',
         'password',
         'user_id',
-        'image'
+        'image',
+        'language',
     ];
 
     /**
@@ -54,5 +55,9 @@ class User extends Authenticatable
 
     public function posts() {
         return $this->hasMany(Post::class);
+    }
+
+    public function socialMedias() {
+        return $this->hasMany(SocialMedia::class);
     }
 }

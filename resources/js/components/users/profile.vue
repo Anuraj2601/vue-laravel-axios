@@ -47,7 +47,7 @@
                 <div class="mt-4 flex flex-col items-center text-sm text-gray-600">
                 <label for="file-upload" class="cursor-pointer relative group">
                     <img
-                    :src="imagePreview || (user.image ? user.image : defaultImage)"
+                    :src="imagePreview || (image)"
                     alt="Profile Preview"
                     class="w-24 h-24 rounded-full object-cover border border-gray-300 hover:opacity-80 transition"
                     />
@@ -59,50 +59,79 @@
                     accept="image/*"
                     @change="handleFileChange"
                     />
+                    <button
+                      type="button"
+                      @click="removeProfileImage"
+                      class="absolute bottom-0 right-0 bg-white border border-gray-300 rounded-full p-1 hover:bg-gray-100 shadow-md"
+                    >
+                      <!-- Heroicon X Mark -->
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
                 </label>
-                <span v-if="errors.image" class="text-red-500 text-sm mt-2">
-                            {{ $t('profile_edit.errors.image') }}
-                    </span>
-                <span class="mt-2 text-indigo-600 hover:text-indigo-500 font-semibold cursor-pointer">
+
+                <div class="flex space-x-3 mt-2">
+                  <span class="text-indigo-600 hover:text-indigo-500 font-semibold cursor-pointer">
                     {{ $t('profile_edit.upload_photo') }}
-                </span>
+                  </span>
+                </div>
+
+                <span v-if="errors.image" class="text-red-500 text-sm mt-2">
+                            {{ errors.image }}
+                    </span>
+                     <span v-else-if="imageError" class="text-red-500 text-sm mt-2">
+                            {{ imageError }}
+                    </span>
+                <!-- <span class="mt-2 text-indigo-600 hover:text-indigo-500 font-semibold cursor-pointer">
+                    {{ $t('profile_edit.upload_photo') }}
+                </span> -->
                 </div>
             </div>
 
               <div>
                 <label class="block text-lg font-medium text-gray-700">{{ $t('profile_edit.labels.name') }}</label>
                 <input
-                  v-model="user.name"
+                  v-model="name"
                   type="text"
                   class="mt-2 block w-full p-3 rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
                 <span v-if="errors.name" class="text-red-500 text-sm mt-2">
-                            {{ $t('profile_edit.errors.name') }}
+                            {{ errors.name }}
+                    </span>
+                <span v-else-if="nameError" class="text-red-500 text-sm mt-2">
+                            {{ nameError }}
                     </span>
               </div>
 
               <div>
                 <label class="block text-lg font-medium text-gray-700">{{ $t('profile_edit.labels.email') }}</label>
                 <input
-                  v-model="user.email"
+                  v-model="email"
                   type="email"
                   class="mt-2 p-3 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
                 <span v-if="errors.email" class="text-red-500 text-sm mt-2">
-                            {{ $t('profile_edit.errors.email') }}
+                            {{ errors.email }}
+                </span>
+                <span v-else-if="emailError" class="text-red-500 text-sm mt-2">
+                            {{ emailError }}
                 </span>
               </div>
 
               <div>
                 <label class="block text-lg font-medium text-gray-700">{{ $t('profile_edit.labels.role') }}</label>
                 <input
-                  v-model="user.role"
+                  v-model="role"
                   type="text"
                   class="mt-2 p-3 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   disabled
                 />
                 <span v-if="errors.role" class="text-red-500 text-sm mt-2">
-                            {{ $t('profile_edit.errors.role') }}
+                            {{ errors.role }}
+                </span>
+                <span v-else-if="roleError" class="text-red-500 text-sm mt-2">
+                            {{ roleError }}
                 </span>
               </div>
 
@@ -136,11 +165,14 @@ import { TransitionRoot, TransitionChild } from '@headlessui/vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { isNull } from 'lodash';
-
+import i18n from '../../i18n';
+import { useField, useForm } from 'vee-validate';
+import { useI18n } from 'vue-i18n';
+import * as yup from 'yup';
 const props = defineProps({
   show: Boolean,
 });
-
+const {t} = useI18n();
 const userId = localStorage.getItem('user_id');
 const token = localStorage.getItem('auth_token');
 const emit = defineEmits(['close', 'save', 'updated']);
@@ -156,7 +188,17 @@ function handleFileChange(event) {
   if (file) {
     selectedFile.value = file; 
     imagePreview.value = URL.createObjectURL(file);
+    image.value = selectedFile.value;
+    imageError.value = '';
   }
+}
+
+function removeProfileImage() {
+  selectedFile.value = null;
+  imagePreview.value = null;
+  image.value = '';
+  /* errors.value.image = '';
+  imageError.value = ''; */
 }
 
 function cancel () {
@@ -195,18 +237,60 @@ function resetForm() {
   };
 }
 
+useForm({
+    validateOnInput: true,
+});
+
+const {
+  value: image,
+  errorMessage: imageError
+} = useField('image', yup.string().required(t('profile_edit.errors.image')))
+
+const {
+  value: name,
+  errorMessage: nameError
+} = useField('name', yup.string().required(t('profile_edit.errors.name')))
+
+const {
+  value: email,
+  errorMessage: emailError
+} = useField('email', yup.string().required(t('profile_edit.errors.email')))
+
+const {
+  value: role,
+  errorMessage: roleError
+} = useField('role', yup.string().required(t('profile_edit.errors.role')))
+
+
+watch(name, (newVal) => {
+  user.name = newVal;
+});
+
+watch(email, (newVal) => {
+  user.email = newVal;
+});
+
+watch(role, (newVal) => {
+  user.role = newVal;
+});
+
 const getProfileInfo = async () => {
     try {
         const response = await axios.get(`api/profile/${userId}` , {
         headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            "Accept-Language": i18n.global.locale.value
         }
     });
     console.log(response.data);
     user.value = response.data.user;
-    user.value.role = response.data.user.role[0];
-    if (!user.value.image) {
-        user.value.image = defaultImage;
+    name.value = response.data.user.name;
+    email.value = response.data.user.email;
+    role.value = response.data.user.role[0];
+    image.value = response.data.user.image;
+    //user.value.role = response.data.user.role[0];
+    if (!image.value) {
+        image.value = `storage/profile_images/sample.jpg`;
     }
     console.log(response.data);
     } catch (error) {
@@ -217,20 +301,21 @@ const getProfileInfo = async () => {
 const updateProfileInfo = async () => {
   try {
     const formData = new FormData();
-    formData.append('name', user.value.name);
-    formData.append('email', user.value.email);
-    formData.append('role', user.value.role);
+    formData.append('name', name.value);
+    formData.append('email', email.value);
+    formData.append('role', role.value);
 
     if (selectedFile.value) {
         formData.append('image', selectedFile.value);
     } else {
-        formData.append('image', user.value.image || '');
+        formData.append('image', '');
     }
 
     console.log(formData);
     const response = await axios.post('api/profile/update', formData, {
       headers: {
         'Authorization': `Bearer ${token}`,
+        "Accept-Language": i18n.global.locale.value,
         'Content-Type': 'multipart/form-data',
       }
     });

@@ -32,32 +32,80 @@
             <form @submit.prevent="updateUser" v-if="props.showEdit">
                 <div class="mb-4">
                     <label for="name" class="block text-lg font-medium text-gray-700 text-left">{{ $t('user_manage.form.name_label') }}</label>
-                    <input v-model="user.name" type="text" :placeholder="$t('user_manage.form.name_placeholder')" class="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
+                    <input v-model="name" type="text" :placeholder="$t('user_manage.form.name_placeholder')" class="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
                     <span v-if="errors.name" class="text-red-500 text-sm mt-2">
-                            {{ $t('user_manage.errors.name') }}
+                            {{ errors.name }}
+                    </span>
+                    <span v-else-if="nameError" class="text-red-500 text-sm mt-2">
+                        {{ nameError }}
                     </span>
                 </div>
                 <div class="mb-4">
                     <label for="email" class="block text-lg font-medium text-gray-700 text-left">{{ $t('user_manage.form.email_label') }}</label>
-                    <input v-model="user.email" type="email" :placeholder="$t('user_manage.form.email_placeholder')" class="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
+                    <input v-model="email" type="email" :placeholder="$t('user_manage.form.email_placeholder')" class="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
                     <span v-if="errors.email" class="text-red-500 text-sm mt-2">
-                            {{ $t('user_manage.errors.email') }}
+                            {{ errors.email }}
+                    </span>
+                    <span v-else-if="emailError" class="text-red-500 text-sm mt-2">
+                        {{ emailError }}
                     </span>
                 </div>
                 <div class="mb-4">
                     <label for="role" class="block text-lg font-medium text-gray-700 text-left">{{ $t('user_manage.form.role_label') }}</label>
-                    <select v-model="user.user_role" class="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" id="role">
+                    <select v-model="user_role" class="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" id="role">
                         <option v-for="role in roles" :key="role.id" :value="role.name">{{ role.name }}</option>
                     </select>
                     <span v-if="errors.user_role" class="text-red-500 text-sm mt-2">
-                            {{ $t('user_manage.errors.user_role') }}
+                            {{errors.user_role }}
+                    </span>
+                    <span v-else-if="user_roleError" class="text-red-500 text-sm mt-2">
+                        {{ user_roleError }}
+                    </span>
+                </div>
+
+                <div class="mb-4 relative">
+                    <label class="block text-lg font-medium text-gray-700 text-left">Password</label>
+                    <input
+                        :type="showPassword ? 'text' : 'password'"
+                        v-model="password"
+                        placeholder="Enter new password"
+                        class="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                    />
+                    <button type="button" @click="showPassword = !showPassword"
+                        class="absolute right-3 top-11 text-gray-500">
+                        {{ showPassword ? 'Hide' : 'Show' }}
+                    </button>
+                    <span v-if="errors.password" class="text-red-500 text-sm mt-2">{{ errors.password }}</span>
+                    <span v-else-if="passwordError" class="text-red-500 text-sm mt-2">
+                        {{ passwordError }}
+                    </span>
+                </div>
+
+                
+                <div class="mb-4 relative">
+                    <label class="block text-lg font-medium text-gray-700 text-left">Confirm Password</label>
+                    <input
+                        :type="showPasswordConfirm ? 'text' : 'password'"
+                        v-model="password_confirmation"
+                        placeholder="Confirm new password"
+                        class="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                    />
+                    <button type="button" @click="showPasswordConfirm = !showPasswordConfirm"
+                        class="absolute right-3 top-11 text-gray-500">
+                        {{ showPasswordConfirm ? 'Hide' : 'Show' }}
+                    </button>
+                    <span v-if="errors.password_confirmation" class="text-red-500 text-sm mt-2">
+                        {{ errors.password_confirmation }}
+                    </span>
+                    <span v-else-if="passwordConfirmError" class="text-red-500 text-sm mt-2">
+                        {{ passwordConfirmError }}
                     </span>
                 </div>
                 
                 <div class="mt-6">
                     <button 
                         type="submit" 
-                        class="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                        class="w-full py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
                         {{$t('user_manage.form.update_button')}}
                     </button>
                 </div>
@@ -76,17 +124,25 @@
 </template>
 
 <script setup>
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import axios from 'axios';
     import { useRoute, useRouter } from 'vue-router';
-import Add from './add.vue';
+    import Add from './add.vue';
+    import i18n from '../../i18n';
+    import store from 'vuex';
+    import * as yup from 'yup';
+    import { useI18n } from 'vue-i18n';
+import { useField, useForm } from 'vee-validate';
 
-    const emit = defineEmits(['updated', 'close']);
+    const { t } = useI18n();
+    const emit = defineEmits(['update:formsU', 'close', 'created']);
     const user = ref({
         name: '',
         email: '',
         id: '',
         user_role: '',
+        password: ref(''),
+        password_confirmation: ref(''),
     });
 
     const errorsU = ref({});
@@ -102,9 +158,13 @@ import Add from './add.vue';
     const errors = ref({
         name: '',
         email: '',
-        user_role: ''
+        user_role: '',
+        password: '',
+        password_confirmation: ''
     });
 
+    const showPassword = ref(false);
+    const showPasswordConfirm = ref(false);
     const router = useRouter();
     const route  = useRoute();
     const token = localStorage.getItem('auth_token');
@@ -126,6 +186,77 @@ import Add from './add.vue';
         emit('close');
     }
 
+    useForm({
+        validateOnInput: true,
+    });
+
+    const {
+        value: name,
+        errorMessage: nameError
+    } = useField('name', yup.string().required(t('user_manage.errors.name')))
+
+    const {
+        value: email,
+        errorMessage: emailError
+    } = useField('email', yup.string().required(t('user_manage.errors.email')))
+
+    const {
+        value: user_role,
+        errorMessage: user_roleError
+    } = useField('user_role', yup.string().required(t('user_manage.errors.user_role')))
+
+    const {
+        value: password,
+        errorMessage: passwordError
+    } = useField(
+        'password',
+        yup
+            .string()
+            .nullable()
+            .notRequired()
+            .test(
+            'min-if-filled',
+            t('user_manage.password.min'),
+            value => !value || value.length >= 8
+        )
+    );
+
+    const {
+        value: password_confirmation,
+        errorMessage: passwordConfirmError
+    } = useField(
+        'password_confirmation',
+        yup
+            .string()
+            .nullable()
+            .when('password', {
+                is: val => val && val.length > 0,
+                then: yup.string().oneOf([password.value], 'Passwords must match'),
+                otherwise: yup.string().nullable(),
+            })
+    );
+
+
+    watch(name, (newVal) => {
+        user.value.name = newVal;
+    });
+
+    watch(email, (newVal) => {
+        user.value.email = newVal;
+    });
+
+    watch(user_role, (newVal) => {
+        user.value.user_role = newVal;
+    });
+
+    watch(password, (newVal) => {
+        user.value.password = newVal;
+    });
+
+    watch(password_confirmation, (newVal) => {
+        user.value.password_confirmation = newVal;
+    });
+
     /* function addForm() {
     open.value= true;
         formsU.value.push({
@@ -143,13 +274,18 @@ import Add from './add.vue';
         try {
             const response = await axios.get(`/api/edit/${props.userId}`, {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    "Accept-Language": i18n.global.locale.value
                 }
             });
 
             roles.value = response.data.roles;
             user.value  = response.data.user;
-            user.value.user_role = response.data.user_role[0];
+            name.value = response.data.user.name;
+            email.value = response.data.user.email;
+            user_role.value = response.data.user_role[0];
+            password.value = '';
+            password_confirmation.value = '';
         } catch (error) {
             console.error("Retrieve User details error" , error);
         }
@@ -159,7 +295,8 @@ import Add from './add.vue';
         try {
             const response = await axios.get('api/roles', {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    "Accept-Language": i18n.global.locale.value
                 }
             });
             roles.value = response.data.roles;
@@ -169,6 +306,7 @@ import Add from './add.vue';
     }
 
     const createUser = async() => {
+        errorsU.value = {};
         try {
             const response = await axios.post('api/register', {
                 name: formsU.value.name,
@@ -176,6 +314,11 @@ import Add from './add.vue';
                 user_role: formsU.value.user_role,
                 password: formsU.value.password,
                 password_confirmation: formsU.value.password_confirmation
+            }, {
+                headers: {
+                    "Authorization" : `Bearer ${token}`,
+                    "Accept-Language": i18n.global.locale.value
+                }
             });
             if(response.data.status == 'success') {
                 emit('close');
@@ -196,15 +339,25 @@ import Add from './add.vue';
     }
     
     const updateUser = async (id) => {
+        errors.value = {};
+        console.log(user.value.user_role);
         try {
-            
-            const response = await axios.put( `/api/update/${user.value.id}`, {
+            const payload = {
                 name: user.value.name,
                 email: user.value.email,
-                role: user.value.user_role
-            },{
+                role: user.value.user_role,
+            };
+
+            if (password.value) {
+                payload.password = password.value;
+                payload.password_confirmation = password_confirmation.value;
+            }
+            const response = await axios.put( `/api/update/${user.value.id}`, 
+                payload
+            ,{
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    "Accept-Language": i18n.global.locale.value
                 }
             }
         );

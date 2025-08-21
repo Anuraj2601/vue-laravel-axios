@@ -18,9 +18,24 @@ class PermissionController extends Controller
      * Get All permissions
      * @return \Illuminate\Http\JsonResponse
      */
-    public function index() {
+    public function index(Request $request) {
         try {
-            $permissionsPaginator = Permission::paginate(5);
+            $perPage = $request->input('per_page', 7);
+            $query = $permissionsPaginator = Permission::orderBy('id','desc');
+
+            if($request->has('search') && $request->search != '') {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%$search%");
+                });
+            }
+            
+            $permissionsPaginator = $query->paginate($perPage)->withQueryString();
+
+            if ($permissionsPaginator->currentPage() > $permissionsPaginator->lastPage() && $permissionsPaginator->lastPage() > 0) {
+                $request->merge(['page' => $permissionsPaginator->lastPage()]);
+                $permissionsPaginator = $query->paginate($perPage)->withQueryString();
+            }
 
             return response()->json([
                 'msg'           => 'success',

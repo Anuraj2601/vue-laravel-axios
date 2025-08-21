@@ -15,3 +15,5 @@ app.use(store);
 app.use(router);
 app.use(i18n);
 app.mount('#app');
+
+i18n.global.locale.value = 'en';

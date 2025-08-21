@@ -18,15 +18,30 @@ class PostController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
 
-     public function create() {
+     public function create(Request $request) {
         $tags = Tag::all();
+        $perPage = $request->input('per_page',7);
 
-        $socialMediasQuery = SocialMedia::orderBy('id', 'desc');
-        $socialMediasPaginator = $socialMediasQuery->paginate(5);
+        $query = $socialMediasQuery = SocialMedia::orderBy('id', 'desc');
+
+        if($request->has('search') && $request->search != '') {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('platform', 'like', "%$search%")
+                    ->orWhere('location', 'like', "%$search%");
+                });
+            }
+        $socialMediasPaginator = $query->paginate($perPage)->withQueryString();
+
+        if ($socialMediasPaginator->currentPage() > $socialMediasPaginator->lastPage() && $socialMediasPaginator->lastPage() > 0) {
+            $request->merge(['page' => $socialMediasPaginator->lastPage()]);
+            $socialMediasPaginator = $query->paginate($perPage)->withQueryString();
+        }
 
         return response()->json([
             'status'        => 'success',
             'tags'          => $tags,
+            'social_medias' => SocialMedia::select('id', 'platform')->get(),
             'socialMedia'   => $socialMediasPaginator->items(),
             'total'         => $socialMediasPaginator->total(),
             'current_page'  => $socialMediasPaginator->currentPage(),

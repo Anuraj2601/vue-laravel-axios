@@ -29,12 +29,12 @@ class RoleRequest extends FormRequest
             'role.permissions' => 'required_with:role|array|nullable',
             'roles' => 'sometimes',
             'roles.id' => 'required_with:roles|exists:roles,id',
-            'roles.name' => 'required_with:roles|string',
+            'roles.name' => 'required_with:roles|string|unique:roles,name,' . $this->input('roles.id'),
             'roles.permissions' => 'required_with:roles|array|nullable',
         ];
     }
 
-    public function messages()
+    /* public function messages()
     {
         return [
             'role.name.required_with' => 'Role Name is required',
@@ -47,6 +47,6 @@ class RoleRequest extends FormRequest
             'roles.permissions.required_with' => 'Permission is required',
             'roles.permissions.array' => 'Role permissions must be an array',
         ];
-    }
+    } */
 
 }

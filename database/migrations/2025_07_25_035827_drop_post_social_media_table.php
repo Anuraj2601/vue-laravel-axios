@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('post_social_media', function (Blueprint $table) {
-            Schema::dropIfExists('post_social_media');
+            /* Schema::dropIfExists('post_social_media'); */
         });
     }
 

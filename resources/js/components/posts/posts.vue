@@ -11,7 +11,7 @@
                     modal-id="feedbackModal"
                 />
 
-                <div class="title flex justify-between items-center">
+                <div class="title flex justify-between space-x-4" v-if="hasPermission('create_social_media')">
                     <button 
                         class="bg-gray-200 text-black mr-32 px-2 py-2 rounded-lg focus:outline-none hover:bg-gray-800 hover:text-gray-100 focus:ring-2 focus:ring-black-500 flex items-center space-x-2"
                         @click="addPost(selectedTab,selectedPlatform)"
@@ -21,6 +21,29 @@
                         </svg>
                         {{ $t('social_s.add') }}
                       </button>
+
+                      <div class="space-x-1">
+                          <select 
+                            v-model="perPage" 
+                            @change="fetchSocialMedia(1)"
+                            class="mt-2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option v-for="n in [5, 6, 7, 8]" :key="n" :value="n">
+                                {{ n }} rows
+                            </option>
+                          </select>
+                        <input 
+                        v-model="searchQuery" 
+                        @input="fetchSocialMedia(1)" 
+                        type="text" 
+                        class="mt-2 w-65 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                        :placeholder="$t('placeholders.search_social_media')"
+                        />
+                    </div>
+                </div>
+
+                <div v-if="permissionError" class="text-red-600 text-sm ml-6 my-2">
+                    {{ permissionError }}
                 </div>
                 
 
@@ -55,7 +78,7 @@
                         <!-- <span class="flex-1 text-sm">URL</span> -->
                         <span class="flex-1 text-sm">{{ $t('social_s.location') }}</span>
                         <span class="flex-1 text-sm">{{ $t('social_s.date') }}</span>
-                        <span class="text-sm w-auto">{{ $t('social_s.action') }}</span>
+                        <span class="text-sm w-auto" v-if="hasPermission('edit_social_media') || hasPermission('delete_social_media')">{{ $t('social_s.action') }}</span>
                       </div>
                         <ul class="w-full bg-white-100 p-4 space-y-2 rounded-lg">
                           <li 
@@ -71,15 +94,28 @@
                               <!-- <span class="flex-1 text-sm text-gray-500 truncate">{{ social.url }}</span> -->
                               <span class="flex-1 text-sm text-gray-500 truncate">{{ social.location }}</span>
                               <span class="flex-1 text-sm text-gray-500 truncate">{{ social.date }}</span>
-                                <button 
-                                class="bg-yellow-500 text-white p-2 rounded-md hover:bg-yellow-400 text-sm flex items-center space-x-2"
-                                @click="editPost(social.id,social.platform)"
-                                >
-                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                                  </svg>
-                                {{ $t('social_s.edit') }}
-                              </button>
+                                <div class="flex space-x-2">
+                                  <button 
+                                    v-if="hasPermission('edit_social_media')"
+                                    class="bg-yellow-500 text-white p-2 rounded-md hover:bg-yellow-400 text-sm flex items-center space-x-2"
+                                    @click="editPost(social.id,social.platform)"
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                      </svg>
+                                    {{ $t('social_s.edit') }}
+                                  </button>
+                                  <button 
+                                    v-if="hasPermission('delete_social_media')"
+                                    class="bg-red-500 text-white p-2 rounded-md hover:bg-red-400 text-sm flex items-center space-x-2"
+                                    @click="confirmDelete(social.id)"
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                      </svg>
+                                    {{ $t('social_delete.action') }}
+                                  </button>
+                                </div>
                             </div>
                           </li>
                         </ul>
@@ -229,6 +265,16 @@
             </div>
             </Dialog>
             </TransitionRoot>
+
+            <WarningModal
+        :show="showWarning"
+        :title="$t('social_delete.delete_title')"
+        :message="$t('social_delete.delete_message')"
+        @close="showWarning=false"
+        @confirm="deleteSocialMedia"
+      >
+
+      </WarningModal>
 </template>
 
 
@@ -237,10 +283,12 @@ import { onMounted, ref } from 'vue';
 import axios from "axios";
 import { useRouter } from "vue-router";
 import Modal from "../modals/Modal.vue";
-import WarningModal from '../modals/WarningModal.vue';
 import EditDrawer from './EditDrawer.vue';
 import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from '@headlessui/vue';
 import Edit from './edit.vue';
+import i18n from '../../i18n';
+import { useStore } from 'vuex';
+import WarningModal from '../modals/WarningModal.vue';
 
 
 const posts = ref([]);
@@ -251,8 +299,7 @@ const totalSocialMedia = ref(0);
 const totalPosts = ref(0);
 const router = useRouter();
 const loading = ref(false);
-const showWarning = ref(false);
-const postToDelete = ref(null);
+const socilMediaToDelete = ref(null);
 const edit = ref(false);
 const selectedSocialMediaId = ref(null);
 const selectedSocialMediaName = ref(null);
@@ -264,7 +311,11 @@ const modalMessage = ref('');
 const modalRef = ref(null);
 const showEditForm = ref(false);
 const showUserEditForm = ref(false);
-
+const store = useStore();
+const permissionError = ref('');
+const showWarning = ref(false);
+const perPage = ref(7);
+const showMyPostAddForm = ref(false);
 const showModal = (title, message) => {
   modalTitle.value = title;
   modalMessage.value = message;
@@ -277,7 +328,12 @@ function editPost(id,name) {
     edit.value = true;
     showEditForm.value = true;
     showUserEditForm.value = false;
+    showMyPostAddForm.value = false;
 }
+
+const hasRole = (role) => store.getters['auth/hasRole'](role);
+const hasPermission = (permission) => store.getters['auth/hasPermission'](permission);
+
 
 function addPost(id,name) {
     selectedSocialMediaId.value = id;
@@ -285,6 +341,7 @@ function addPost(id,name) {
     edit.value = true;
     showEditForm.value = false;
     showUserEditForm.value = false;
+    showMyPostAddForm.value = false;
 }
 
 function closeEdit() {
@@ -305,12 +362,19 @@ const axiosInstance = axios.create({
   }
 });
 
+function confirmDelete(id) {
+  socilMediaToDelete.value = id;
+  showWarning.value = true;
+}
+
+
 const fetchSocialMedia = async () => {
     try {
         loading.value = true;
-         const response = await axios.get(`api/posts/create?page=${currentPage.value}`, {
+         const response = await axios.get(`api/posts/create?page=${currentPage.value}&search=${searchQuery.value}&per_page=${perPage.value}`, {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                "Accept-Language": i18n.global.locale.value
             }
         });
         socialMediaTypes.value = response.data.socialMedia;
@@ -318,6 +382,33 @@ const fetchSocialMedia = async () => {
         totalPages.value = response.data.last_page;
         loading.value = false;
     } catch (error) {
+        if (error.response.status === 403) {
+              permissionError.value = error.response.data.message;
+        } 
+        console.error('Unable to fetch Social media', error);
+    }
+}
+
+const deleteSocialMedia = async() => {
+    try {
+        showWarning.value = false;
+         loading.value = true;
+         const response = await axios.delete('api/social-media/delete', {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                "Accept-Language": i18n.global.locale.value
+            },
+            data: { social_media_id:  socilMediaToDelete.value}
+        });
+        if(response.data.status == 'success') {
+            fetchSocialMedia();
+        }
+        
+        loading.value = false;
+    } catch (error) {
+        if (error.response.status === 403) {
+              permissionError.value = error.response.data.message;
+        } 
         console.error('Unable to fetch Social media', error);
     }
 }
@@ -346,10 +437,6 @@ const changePage = (page) => {
   }
 }
 
-function confirmDelete(id) {
-  postToDelete.value = id;
-  showWarning.value = true;
-}
 
 
 
@@ -394,10 +481,10 @@ onMounted(async () => {
 
 .title {
     display: flex;
-    justify-content:space-between;
+    /* justify-content:space-between; */
     margin-top: 12px;
     margin-left: 40px;
-    margin-right: 120px;
+    margin-right: 58px;
     text-align: left;
     font-size: small;
 }

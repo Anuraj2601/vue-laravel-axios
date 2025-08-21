@@ -1,15 +1,20 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import SuccessModal from '../modals/SuccessModal.vue';
 import Add from './add.vue';
 import axios from 'axios';
 import Multiselect from 'vue-multiselect';
 import WarningModal from '../modals/WarningModal.vue';
 import { useStore } from 'vuex';
+import i18n from '../../i18n';
+const {t} = useI18n();
+import * as yup from 'yup';
+import { useI18n } from 'vue-i18n';
+import { useField, useForm } from 'vee-validate';
 const showSuccess = ref(false);
 const showWarning = ref(false);
 const showUpdate = ref(false);
-const emit = defineEmits(['updated']);
+const emit = defineEmits(['updated', 'created']);
 const RName = ref('');
 const roleToDelete = ref(null);
 const loading = ref(false);
@@ -32,8 +37,8 @@ const props = defineProps({
 });
 
 const roles = ref([]);
-
-const permissions = ref([]);
+const store = useStore();
+const permission = ref([]);
 
 const errorR = ref({}); // Edit  roles error
 const errorsR = ref({})  // create role error
@@ -52,14 +57,37 @@ function handleRoleName(name) {
     RName.value = name;
 }
 
-function showSuccessModal() {
+useForm({
+    validateOnInput: true,
+});
+
+const {
+  value: name,
+  errorMessage: nameError
+} = useField('name', yup.string().required(t('roles_edit.errors.name')))
+
+const {
+  value: permissions,
+  errorMessage: permissionError
+} = useField('permissions', yup.array().required(t('roles_edit.errors.permissions')))
+
+permissions.value = [];
+
+watch(name, (newVal) => {
+  formsE.name = newVal;
+});
+
+watch(permissions, (newVal) => {
+  formsE.permissions = newVal;
+});
+
+/* function showSuccessModal() {
     showSuccess.value = true;
     setTimeout(() => {
         emit('created')
         showSuccess.value = false
-        emit('close')
     }, 1500)
-}
+} */
 
 /* function addForm() {
   open.value= true;
@@ -105,7 +133,8 @@ const fetchRoles = async () => {
         loading.value = true;
         const res = await axios.get('api/roles', {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                "Accept-Language": i18n.global.locale.value
             }
         });
         roles.value = res.data.roles;
@@ -122,12 +151,13 @@ const fetchRoleById = async() => {
         loading.value = true;
         const res = await axios.get(`api/role/${props.roleId}`, {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                "Accept-Language": i18n.global.locale.value
             }
         });
-        formsE.value = res.data.roles;
-        formsE.value.permissions = res.data.roles.permissions;
-        /* permissions.value = res.data.permissions; */
+        name.value = res.data.roles.name;
+        permissions.value = res.data.permission;
+        permission.value = res.data.permissions;
         loading.value = false;
     } catch (error) {
         console.error('Unable to fetch roles', error);
@@ -139,7 +169,7 @@ function confirmDelete(id) {
     showWarning.value = true;
 }
 
-const store = useStore();
+
 
 const hasRole = (role) => store.getters['auth/hasRole'](role);
 const hasPermission = (permission) => store.getters['auth/hasPermission'](permission);
@@ -151,13 +181,14 @@ const submitFormAdd = async() => {
             role: formsR.value,
         }, {
             headers: {
-                "Authorization": `Bearer ${token}`
+                "Authorization": `Bearer ${token}`,
+                "Accept-Language": i18n.global.locale.value
             }
         });
         if(response.data.status == 'success') {
             cancel();
             emit('updated');
-            showSuccessModal();
+            /* showSuccessModal(); */
         }
     } catch (error) {
         if(error.response) {
@@ -175,16 +206,22 @@ const submitFormAdd = async() => {
 const submitFormEdit = async() => {
     try {
         const response = await axios.post('api/roles/create', {
-            roles: formsE.value
+            roles: {
+                id: props.roleId,
+                name: name.value,              
+                permissions: permissions.value
+            }
         }, {
             headers: {
-                "Authorization": `Bearer ${token}`
+                "Authorization": `Bearer ${token}`,
+                "Accept-Language": i18n.global.locale.value
             }
         });
         if(response.data.status == 'success') {
+            store.dispatch('auth/fetchUser');
             cancel();
             emit('updated');
-            showSuccessModal();
+            /* showSuccessModal(); */
         }
     } catch (error) {
         if(error.response) {
@@ -219,7 +256,8 @@ const fetchPermissions = async() => {
     try {
         const res = await axios.get('api/permissions', {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                "Accept-Language": i18n.global.locale.value
             }
         });
         permissions.value = res.data.permissions;
@@ -233,7 +271,7 @@ const cancel = () => {
 }
 
 onMounted(async () => {
-    await fetchPermissions();
+    
     if(props.showEdit) {
         fetchRoleById();
     }else {
@@ -312,13 +350,16 @@ onMounted(async () => {
                         <div class="w-full">
                             <label for="name" class="block text-lg font-medium text-gray-700 text-left">{{ $t('roles_edit.form.name_label') }}<span class="text-red-400 text-base font-medium">*</span></label>
                             <input 
-                                v-model="formsE.name" 
+                                v-model="name" 
                                 type="text" 
                                 :placeholder="$t('roles_edit.form.name_placeholder')" 
                                 class="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
                             />
                             <div v-if="errorR?.name" class="text-red-500 text-sm mt-2">
-                                {{ $t('roles_edit.errors.name') }}
+                                {{ errorR.name }}
+                            </div>
+                            <div v-else-if="nameError" class="text-red-500 text-sm mt-2">
+                                {{ nameError }}
                             </div>
                         </div>
                     </div>
@@ -327,12 +368,12 @@ onMounted(async () => {
                     <div class="mb-4">
                         <label for="tags" class="block text-lg font-medium text-gray-700 text-left">Permissions<span class="text-red-400 text-base font-medium">*</span></label>
                         <Multiselect
-                            v-model="formsE.permissions"
-                            :options="permissions"
+                            v-model="permissions"
+                            :options="permission"
                             :multiple="true"
                             :close-on-select="true"
                             :clear-on-select="false"
-                            :preserve-search="true"
+                            :preserve-search="false"
                             
                             label="name"
                             track-by="id"
@@ -346,11 +387,14 @@ onMounted(async () => {
                             </span>
                         </template>
                         <template #clear="props">
-                            <div class="multiselect__clear" v-if="formsE.permissions.length" @mousedown.prevent.stop="clearAll(props.search)"></div>
+                            <div class="multiselect__clear" v-if="permissions.length" @mousedown.prevent.stop="clearAll(props.search)"></div>
                         </template>
                         </Multiselect>
                         <div v-if="errorR?.permissions" class="text-red-500 text-sm mt-2">
-                            {{ $t('roles_edit.errors.permissions') }}
+                            {{ errorR.permissions }}
+                        </div>
+                        <div v-else-if="permissionError" class="text-red-500 text-sm mt-2">
+                            {{ permissionError }}
                         </div>
                     </div>
                 </div>
@@ -372,7 +416,7 @@ onMounted(async () => {
                 <button 
                     type="button" 
                     @click="submitFormEdit"
-                    class="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    class="w-full py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm"
                     >
                     {{ $t('roles_edit.form.edit') }}
                 </button>

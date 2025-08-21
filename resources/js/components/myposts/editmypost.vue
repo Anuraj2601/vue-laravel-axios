@@ -1,26 +1,32 @@
 <script setup>
 import axios from 'axios';
-import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { computed, onBeforeMount, onMounted, reactive, ref, watch, watchEffect } from 'vue';
 import SuccessModal from '../modals/SuccessModal.vue';
 import i18n from '../../i18n';
 import { useField, useForm } from 'vee-validate';
 import * as yup from 'yup';
 import { useI18n } from 'vue-i18n';
+import Multiselect from 'vue-multiselect';
 const tags = ref([]);
 const socialMedia = ref([]);
 const { t }  = useI18n();
 const token = localStorage.getItem('auth_token');
 const showSuccess = ref(false);
+const isNewPlatform = ref(false);
+const hydrated = ref(false);
 
-
-const emit = defineEmits(['close', 'created', 'update:formsSoc', 'remove', 'name']);
+const emit = defineEmits(['close', 'created', 'update:formMyPost', 'remove', 'name']);
 
 const props = defineProps({
-    formsSoc: {
-        type: Object,
-        required: true
+    socialMediaId: {
+        type: [String, Number],
+        required: true,
     },
-    errorsSoc: {
+    formMyPost1: {
+        type: Object,
+        required: true,
+    },
+    errorMyPost1: {
         type: Object,
         required: true
     }
@@ -31,14 +37,17 @@ const closeForm = async () => {
   }
 }
 
-useForm({
+const { setFieldValue  } = useForm({
     validateOnInput: true,
+    validateOnMount: false,
+    validateOnModelUpdate: false,
 });
 
 const {
   value: platform,
   errorMessage: platformError
-} = useField('platform', yup.string().required(t('social_add.name_required')))
+} = useField('platform', yup.object().required(t('social_add.name_required')))
+
 
 const {
   value: location,
@@ -48,14 +57,22 @@ const {
 const {
   value: date,
   errorMessage: dateError
-} = useField('date', yup.date().required(t('social_add.date_required'))
-        .test('is-today', t('social_add.date_must_be_today'), function (value) {
-        if (!value) return false;
-        const selected = new Date(value);
-        selected.setHours(0, 0, 0, 0);
-        return selected.getTime() === today_date.getTime();
+} = useField(
+  'date',
+  yup
+    .date()
+    .required(t('social_add.date_required'))
+    .test('is-today', t('social_add.date_must_be_today'), function (value) {
+      if (!value) return false;
+
+      if (!isNewPlatform.value) return true;
+
+      const selected = new Date(value);
+      selected.setHours(0, 0, 0, 0);
+      return selected.getTime() === today_date.getTime();
     })
-)
+);
+
 
 const today_date = new Date();
 today_date.setHours(0, 0, 0, 0);
@@ -88,10 +105,8 @@ const fetchTags = async () => {
         }
     });
     tags.value = response.data.tags;
-    socialMedia.value = response.data.socialMedia;
+    socialMedia.value = response.data.social_medias || [];
 }
-
-
 
 function showSuccessModal() {
     showSuccess.value = true;
@@ -102,25 +117,38 @@ function showSuccessModal() {
     }, 1500)
 }
 
-watch(platform, (newVal) => {
-  props.formsSoc.platform = newVal;
-});
+watch(() => props.formMyPost1, (newVal) => {
+  if (!newVal) return;
+    if (Array.isArray(newVal.platform) && newVal.platform.length > 0) {
+    setFieldValue('platform', newVal.platform[0], { force: false });
+  } else if (typeof newVal.platform === 'string') {
+    setFieldValue('platform', { id: Date.now(), platform: newVal.platform, isNew: true }, { force: false });
+  } else {
+    setFieldValue('platform', null, { force: false });
+  }
 
+  setFieldValue('location', newVal.location ?? '', { force: false });
+  setFieldValue('date', newVal.date || today.value, { force: false });
+  hydrated.value = true;
+}, { immediate: true });
+
+
+
+// Sync back to parent
 watch(location, (newVal) => {
-  props.formsSoc.location = newVal;
+  props.formMyPost1.location = newVal;
 });
 
 watch(date, (newVal) => {
-  props.formsSoc.date = newVal;
+  props.formMyPost1.date = newVal;
 });
 
-onMounted(() => {
-    fetchTags();
-    if(!props.formsSoc.date) {
-        props.formsSoc.date = today.value;
-        date.value = props.formsSoc.date;
-    }
-});
+
+onBeforeMount(fetchTags);
+/* onMounted(() => {
+  fetchTags();
+}); */
+
 </script>
 
 <template>
@@ -141,20 +169,16 @@ onMounted(() => {
         </SuccessModal>
 
         <div class="rounded-lg mt-2">
-                <form class="space-y-6">
+                <form class="space-y-6" v-if="hydrated">
                     
                     <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
                         <div class="w-full md:w-1/2">
-                            <label for="social_media_name" class="text-lg font-medium text-gray-700 text-left"> {{ $t('social_add.name_label') }}<span class="text-red-400 text-base font-medium">*</span></label>
-                            <input 
-                                type="text" 
-                                v-model="platform" 
-                                id="social_media_name" 
-                                class="mt-2 p-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" 
-                                :placeholder="$t('social_add.name_placeholder')"
-                            />
-                            <div v-if="props.errorsSoc?.platform" class="text-red-500 text-sm mt-2">
-                                {{ props.errorsSoc.platform }}
+                            <label for="platform" class="text-lg font-medium text-gray-700 text-left"> {{ $t('social_add.name_label') }}<span class="text-red-400 text-base font-medium">*</span></label>
+                            <Multiselect id="single-select-search" v-model="platform" :options="socialMedia" :custom-label="opt => opt.platform" placeholder="Select one" label="platform"
+                                class="mt-2" :multiple="false" :disabled="true"
+                                track-by="id" aria-label="pick a value"></Multiselect>
+                            <div v-if="props.errorMyPost1?.platform" class="text-red-500 text-sm mt-2">
+                                {{ props.errorMyPost1.platform }}
                             </div>
                             <div v-else-if="platformError" class="text-red-500 text-sm mt-2">
                                 {{ platformError }}
@@ -169,9 +193,10 @@ onMounted(() => {
                                 id="description" 
                                 class="mt-2 p-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" 
                                 :placeholder="$t('social_add.location_placeholder')"
+                                :disabled="true"
                             />
-                            <div v-if="props.errorsSoc?.location" class="text-red-500 text-sm mt-2">
-                                {{ props.errorsSoc.location }}
+                            <div v-if="props.errorMyPost1?.location" class="text-red-500 text-sm mt-2">
+                                {{ props.errorMyPost1.location }}
                             </div>
                             <div v-else-if="locationError" class="text-red-500 text-sm mt-2">
                                 {{ locationError }}
@@ -190,9 +215,10 @@ onMounted(() => {
                             placeholder="$t('social_add.date_placeholder')"
                             :min="today"
                             :max="today"
+                            :disabled="true"
                         />
-                        <div v-if="errorsSoc?.date" class="text-red-500 text-sm mt-2">
-                            {{ errorsSoc.date }}
+                        <div v-if="errorMyPost1?.date" class="text-red-500 text-sm mt-2">
+                            {{ errorMyPost1.date }}
                         </div>
                         <div v-else-if="dateError" class="text-red-500 text-sm mt-2">
                             {{ dateError }}

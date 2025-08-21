@@ -2,7 +2,12 @@
 
 namespace App\Exceptions;
 
+use GuzzleHttp\Psr7\Request;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\App;
+use Spatie\Permission\Exceptions\UnauthorizedException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -43,8 +48,15 @@ class Handler extends ExceptionHandler
      */
     public function register()
     {
-        $this->reportable(function (Throwable $e) {
-            //
+
+        $this->renderable(function (UnauthorizedException $e, $request) {
+
+                $locale = $request->header('Accept-Language', App::getLocale() ?? 'en');
+                App::setLocale($locale);
+
+                return response()->json([
+                    'message' => __('errors.permission_denied'),
+                ], 403);
         });
     }
 }

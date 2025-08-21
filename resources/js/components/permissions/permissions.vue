@@ -5,6 +5,7 @@ import { onMounted, ref } from 'vue';
 import Edit from './edit.vue';
 import WarningModal from '../modals/WarningModal.vue';
 import { useStore } from 'vuex';
+import i18n from '../../i18n';
 
 const permissionTypes = ref([]);
 const loading = ref(false);
@@ -15,18 +16,20 @@ const showWarning = ref(false);
 const selectedPermissionId = ref('');
 const selectedPermissionName = ref('');
 const currentPage = ref(1);
-/* const searchQuery = ref(''); */
+const searchQuery = ref('');
 const totalPages = ref(1);
 const totalPermissions = ref(0);
-
+const permissionError = ref('');
 const token = localStorage.getItem('auth_token');
+const perPage = ref(7);
 
 const fetchPermissions = async () => {
     try {
         loading.value = true;
-        const res = await axios.get(`api/permissions?page=${currentPage.value}`, {
+        const res = await axios.get(`api/permissions?page=${currentPage.value}&search=${searchQuery.value}&per_page=${perPage.value}`, {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                "Accept-Language": i18n.global.locale.value
             }
         });
         permissionTypes.value = res.data.permissions;
@@ -34,7 +37,13 @@ const fetchPermissions = async () => {
         totalPages.value = res.data.last_page;
         loading.value = false;
     } catch (error) {
-        console.error('Unable to fetch roles', error);
+        loading.value = false;
+        if (error.response.status === 403) {
+            permissionError.value = error.response.data.message;
+        } 
+         
+        console.error('Unable to fetch permissions', error.response.status);
+        
     }
 }
 const store = useStore();
@@ -69,13 +78,19 @@ const deletePermission = async() => {
         showWarning.value = false;
         const res = await axios.delete(`api/permissions/delete/${permissionToDelete.value}`, {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                "Accept-Language": i18n.global.locale.value
             }
         });
         if(res.data.status == 'success') {
             fetchPermissions();
         }
     } catch (error) {
+        if (error.response?.status === 403) {
+            permissionError.value = error.response.data.message || i18n.global.t('errors.forbidden');
+        } else {
+            console.error('Unable to fetch roles', error);
+        }
         console.error('Delete permission error', error);
     }
 }
@@ -95,7 +110,7 @@ onMounted(fetchPermissions);
         <h2 class="text-2xl font-semibold">{{ $t('permissions_s.title') }}</h2>
     </div>
 
-    <div class="title flex justify-between items-center" v-if="hasRole('superadmin')">
+    <div class="title flex justify-between items-center" v-if="hasPermission('create_permission')">
         <button 
             class="bg-gray-200 text-black mr-32 px-2 py-2 rounded-lg focus:outline-none hover:bg-gray-800 hover:text-gray-100 focus:ring-2 focus:ring-black-500 flex items-center space-x-2"
             @click="addPermission()"
@@ -105,14 +120,36 @@ onMounted(fetchPermissions);
             </svg>
                 {{ $t('permissions_s.add') }}
         </button>
+        <div class="space-x-1">
+            <select 
+                    v-model="perPage" 
+                    @change="fetchPermissions(1)"
+                    class="mt-2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                    <option v-for="n in [5, 6, 7, 8]" :key="n" :value="n">
+                        {{ n }} rows
+                    </option>
+                </select>
+            <input 
+                v-model="searchQuery" 
+                @input="fetchPermissions(1)" 
+                type="text" 
+                class="mt-2 w-65 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                :placeholder="$t('placeholders.search_permissions')"
+            />
+        </div>
     </div>
 
-    <div class="overflow-x-auto ml-6 mr-10">
+    <div v-if="permissionError" class="text-red-600 text-sm ml-6 my-2">
+        {{ permissionError }}
+    </div>
+
+    <div class="overflow-x-auto ml-6 mr-10" v-if="hasPermission('manage_permissions')">
         <div class="list-container">
             <div class="flex items-center text-left font-semibold text-gray-800 mt-6 px-10">
                 <span class="flex-1 text-sm">{{ $t('permissions_s.name') }}</span>
                 <span class="flex-1 text-sm"></span>
-                <span class="w-auto text-sm" v-if="hasRole('superadmin')">{{ $t('permissions_s.actions') }}</span>
+                <span class="w-auto text-sm">{{ $t('permissions_s.actions') }}</span>
             </div>
             <ul class="w-full bg-white p-4 space-y-2 rounded-lg mt-2">
                 <li v-for="(permission, idx) in permissionTypes"
@@ -121,8 +158,9 @@ onMounted(fetchPermissions);
                     class="py-2 cursor-pointer bg-gray-100 flex justify-between items-center border-b-2 border-gray-200 rounded-lg">
                     <span class="flex-1 text-lg text-left ml-6 truncate">{{ permission.name }}</span>
                     
-                    <div class="flex space-x-2" v-if="hasRole('superadmin')">
+                    <div class="flex space-x-2">
                         <button
+                                v-if="hasPermission('edit_permission')"
                                 @click.stop="editPermission(permission.id)"
                                 class="bg-yellow-500 text-white px-3 py-1 rounded-md hover:bg-yellow-400 text-sm flex items-center"
                         >
@@ -135,6 +173,7 @@ onMounted(fetchPermissions);
                                 {{ $t('permissions_s.edit') }}
                         </button>
                         <button
+                            v-if="hasPermission('delete_permission')"
                             @click="confirmDelete(permission.id)"
                             class="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-400 text-sm flex items-center"
                         >
@@ -208,7 +247,7 @@ onMounted(fetchPermissions);
         </Dialog>
     </TransitionRoot>
 
-    <div class="mt-2">
+    <div class="mt-2" v-if="hasPermission('manage_permissions')">
                     <nav aria-label="Page navigation example">
                     <ul class="flex justify-center space-x-2">
                         <li class="page-item" :class="{ 'opacity-50 cursor-not-allowed': currentPage === 1 }">

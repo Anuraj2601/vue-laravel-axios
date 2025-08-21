@@ -26,7 +26,16 @@ class StoreSocialMediaRequest extends FormRequest
         return [
             'platform' => 'required|unique:social_media,platform|string',
             'location' => 'required',
-            'date'     => 'required|date|in:' . \Carbon\Carbon::today()->toDateString(),
+            'date' => [
+            'required',
+            'date',
+                function ($attribute, $value, $fail) {
+                    $platformExists = \App\Models\SocialMedia::where('platform', $this->input('platform'))->exists();
+                    if (!$platformExists && $value !== \Carbon\Carbon::today()->toDateString()) {
+                        $fail(__('socialmedia.date_must_be_today'));
+                    }
+                }
+            ],
             'forms'        => 'sometimes|array',
             'forms.*.name' => 'required_with:forms|string|max:255',
             'forms.*.description' => 'required_with:forms|string|max:255',
@@ -34,7 +43,7 @@ class StoreSocialMediaRequest extends FormRequest
         ];
     }
 
-    public function messages() {
+    /* public function messages() {
         return [
             'platform.required' => 'Social media name is required.',
             'platform.unique'   => 'This social media name already exists.',
@@ -59,5 +68,5 @@ class StoreSocialMediaRequest extends FormRequest
             'forms.*.tags.array' => 'Post tags must be an array.',
             'forms.*.tags.required_with' => 'Post tags are required.',
         ];
-    }
+    } */
 }

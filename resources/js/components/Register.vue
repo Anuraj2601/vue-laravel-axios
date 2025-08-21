@@ -92,6 +92,7 @@ const name = ref('');
 const email = ref('');
 const password = ref('');
 const password_confirmation = ref('');
+const user_role = ref('user');
 const router = useRouter();
 
 const errors = ref({
@@ -112,7 +113,8 @@ const registerUser = async () => {
             name: name.value,
             email: email.value,
             password: password.value,
-            password_confirmation: password_confirmation.value
+            password_confirmation: password_confirmation.value,
+            user_role: user_role.value
         });
         
         if(response.data.status == 'success') {

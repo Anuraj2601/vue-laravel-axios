@@ -35,13 +35,13 @@ class PermissionRequest extends FormRequest
     
     public function messages() {
         return [
-            'forms.name.required_with' => 'Permission name is required',
+            /* 'forms.name.required_with' => 'Permission name is required',
             'forms.name.unique' => 'Permission name already taken',
 
             'permissions.id.required_with' => 'Permission ID is required',
             'permissions.name.required_with' => 'Permission name is required',
             'permissions.name.unique' => 'Permission name already taken.',
-            'permissions.name.string' => 'Permission name must be a string',
+            'permissions.name.string' => 'Permission name must be a string', */
         ];
     }
 }

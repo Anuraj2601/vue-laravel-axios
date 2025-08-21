@@ -28,14 +28,49 @@
             </button>
         </div> -->
 
-                <div class="overflow-x-auto mr-10 ml-6">
+            <div class="title flex justify-between text-sm space-x-4">
+                <button 
+                        class="bg-gray-200 text-black mr-32 px-2 py-2 rounded-lg focus:outline-none hover:bg-gray-800 hover:text-gray-100 focus:ring-2 focus:ring-black-500 flex items-center space-x-2"
+                        @click="addPost(selectedTab,selectedPlatform)"
+                >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        {{ $t('manage_my_posts') }}
+                </button>
+                <div class="space-x-1" v-if="isSocialMediaList">
+                    <select 
+                    v-model="perPage" 
+                    @change="fetchSocialMedia(1)"
+                    class="mt-2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                    <option v-for="n in [5, 6, 7, 8]" :key="n" :value="n">
+                        {{ n }} rows
+                    </option>
+                </select>
+                <input 
+                    v-model="searchQuery" 
+                    @input="fetchSocialMedia(1)" 
+                    type="text" 
+                    class="mt-2 w-70 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                    :placeholder="$t('placeholders.search_social_media')"
+                />
+                </div>
+            </div>
+
+            <div v-if="permissionError" class="text-red-600 text-sm ml-6 my-2">
+                    {{ permissionError }}
+            </div>
+                
+
+                <div class="overflow-x-auto mr-10 ml-6" v-if="hasPermission('manage_my_posts') && isSocialMediaList">
                     <div class="list-container">
                       <div class="flex items-center text-left font-semibold text-gray-800 mt-6 gap-4 px-10">
                         <span class="flex-1 text-sm">{{ $t('posts_s.platform') }}</span>
                         <!-- <span class="flex-1 text-sm">URL</span> -->
                         <span class="flex-1 text-sm">{{ $t('posts_s.location') }}</span>
                         <span class="flex-1 text-sm">{{ $t('posts_s.date') }}</span>
-                        <span class="text-sm w-auto">{{ $t('posts_s.action') }}</span>
+                        <span class="text-sm w-auto" v-if="hasPermission('manage_my_posts')">{{ $t('posts_s.action') }}</span>
                       </div>
                         <ul class="w-full bg-white-100 p-4 space-y-2 rounded-lg">
                           <li 
@@ -54,6 +89,7 @@
                               <span class="flex-1 text-sm text-gray-500 truncate">{{ social.location }}</span>
                               <span class="flex-1 text-sm text-gray-500 truncate">{{ social.date }}</span>
                                 <button 
+                                v-if="hasPermission('manage_my_posts')"
                                 class="bg-yellow-500 text-white p-2 rounded-md hover:bg-yellow-400 text-sm flex items-center space-x-2"
                                 @click="editPost(social.id,social.platform)"
                                 >
@@ -133,6 +169,9 @@
                                 </button>
                             </div>
                         </div>
+                        <div v-else-if="!isSocialMediaList">
+                            <p>{{ $t('no_social_media') }}</p>
+                        </div>
                         <div v-else class="items-center p-4">
                             <button type="button" class="flex" disabled>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 animate-spin">
@@ -144,7 +183,7 @@
                     </div>
             </div>
 
-        <div class="mt-6">
+        <div class="mt-6" v-if="isSocialMediaList">
         <nav aria-label="Page navigation example">
           <ul class="flex justify-center space-x-2">
             <li class="page-item" :class="{ 'opacity-50 cursor-not-allowed': currentPage === 1 }">
@@ -225,7 +264,7 @@
                     class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 w-full sm:max-w-lg"
                     >
                     
-                    <Edit :socialMediaId="selectedSocialMediaId" :showEdit="showEditForm" :showUserEdit="showUserEditForm" :platformName="selectedSocialMediaName" @close="closeEdit" @updated="fetchSocialMedia" />
+                    <Edit :socialMediaId="selectedSocialMediaId" :showEdit="showEditForm" :showUserEdit="showUserEditForm" :showMyPostAdd="showMyPostAddForm" :platformName="selectedSocialMediaName" @close="closeEdit" @updated="fetchSocialMedia" />
                     
                     </DialogPanel>
                 </TransitionChild>
@@ -243,6 +282,8 @@ import axios from "axios";
 import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from "@headlessui/vue";
 import WarningModal from "../modals/WarningModal.vue";
 import Edit from "./edit.vue";
+import i18n from "../../i18n";
+import { useStore } from "vuex";
 
 const posts = ref([]);
 const currentPage = ref(1);
@@ -261,8 +302,12 @@ const socialMediaTypes = ref([]);
 const selectedTab = ref(1);
 const selectedPlatform = ref("Facebook");
 const showEditForm = ref(false);
+const permissionError = ref('');
 const showUserEditForm = ref(false);
-
+const showMyPostAddForm = ref(false);
+const store = useStore();
+const perPage = ref(7);
+const isSocialMediaList = ref(false);
 function openModal() {
   open.value = true
 }
@@ -279,14 +324,28 @@ function editPost(id,name) {
     selectedSocialMediaId.value = id;
     selectedSocialMediaName.value = name;
     edit.value = true;
-    showEditForm.value = true;
+    showEditForm.value = false;
     showUserEditForm.value = true;
+    showMyPostAddForm.value = false;
 }
+
+function addPost() {
+    edit.value = true;
+    selectedSocialMediaId.value = '';
+    selectedSocialMediaName.value = '';
+    showEditForm.value = false;
+    showUserEditForm.value = false;
+    showMyPostAddForm.value = true;
+}
+
+const hasRole = (role) => store.getters['auth/hasRole'](role);
+const hasPermission = (permission) => store.getters['auth/hasPermission'](permission);
+
 
 const selectTab = (platformId,platform) => {
     selectedTab.value = platformId;
     selectedPlatform.value = platform;
-    fetchPosts();
+    /* fetchPosts(); */
 };
 
 const token = localStorage.getItem('auth_token');
@@ -297,26 +356,40 @@ const axiosInstance = axios.create({
     }
 });
 
-//Fetch only user posts related social media list
+//Fetch User related Social Media List
 const fetchSocialMedia = async () => {
     try {
-         const response = await axios.get(`api/social-media?page=${currentPage.value}`, {
+         const response = await axios.get(`api/social-media-create/user?page=${currentPage.value}&search=${searchQuery.value}&per_page=${perPage.value}`, {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                "Accept-Language": i18n.global.locale.value
             }
         });
-        socialMediaTypes.value = response.data.socialmedia;
+        socialMediaTypes.value = response.data.socialmedia || [];
+        isSocialMediaList.value = socialMediaTypes.value.length > 0;
         totalSocialMedia.value = response.data.total;
         totalPages.value = response.data.last_page;
     } catch (error) {
+        if(error.response) {
+            if (error.response.status === 403) {
+                permissionError.value = error.response.data.message;
+            } 
+        }
         console.error('Unable to fetch Social media', error);
+        socialMediaTypes.value = [];
+        isSocialMediaList.value = false;
     }
 }
 
 const fetchPosts = async () => {
     try {
         loading.value = true;
-        const response = await axiosInstance.get(`/api/posts?page=${currentPage.value}&search=${searchQuery.value}&socialMediaType=${selectedTab.value}`);
+        const response = await axios.get(`/api/posts?page=${currentPage.value}&search=${searchQuery.value}&socialMediaType=${selectedTab.value}`, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Accept-Language": i18n.global.locale.value
+            }
+        });
         posts.value = response.data.posts;
         
         totalPosts.value = response.data.total;
@@ -353,10 +426,9 @@ function confirmDelete(id) {
     }
 } */
 
-onMounted(async () => {
-  await fetchSocialMedia();
+onMounted( fetchSocialMedia
   /* fetchPosts(); */
-});
+);
 
 </script>
 
@@ -393,10 +465,10 @@ onMounted(async () => {
 
 .title {
     display: flex;
-    justify-content:space-between;
+    /* justify-content:space-between; */
     margin-top: 20px;
     margin-left: 40px;
-    margin-right: 120px;
+    margin-right: 78px;
     text-align: left;
     font-size: small;
 }

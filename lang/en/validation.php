@@ -163,8 +163,108 @@ return [
     */
 
     'custom' => [
-        'attribute-name' => [
-            'rule-name' => 'custom-message',
+        'role.name' => [
+            'required_with' => 'Role Name is required',
+            'unique' => 'Role name is already taken',
+        ],
+        'role.permissions' => [
+            'required_with' => 'Permission is required',
+            'array' => 'Permission must be an array',
+        ],
+        'roles.id' => [
+            'required_with' => 'Role ID is required',
+            'exists' => 'Role ID must exist',
+        ],
+        'roles.name' => [
+            'required_with' => 'Role name is required',
+            'unique' => 'Role name already taken.',
+            'string' => 'Role name must be string',
+        ],
+        'roles.permissions' => [
+            'required_with' => 'Permission is required',
+            'array' => 'Role permissions must be an array',
+        ],
+        'forms.name' => [
+            'required_with' => 'Permission name is required',
+            'unique' => 'Permission name already taken',
+        ],
+        'permissions.id' => [
+            'required_with' => 'Permission ID is required',
+        ],
+        'permissions.name' => [
+            'required_with' => 'Permission name is required',
+            'unique' => 'Permission name already taken.',
+            'string' => 'Permission name must be a string',
+        ],
+        'platform' => [
+            'required' => 'Social media name is required.',
+        ],
+        'platform.unique'   => 'This social media name already exists.',
+        'platform.string'   => 'Name must be a string.',
+
+        'location.required' => 'Location is required.',
+
+        'date.required'     => 'Date is required.',
+        'date.date'         => 'Please enter a valid date.',
+        'date_must_be_today' => 'The :attribute must be today.',
+
+        'forms.array'       => 'Posts data must be an array.',
+
+        'forms.*.name.required_with' => 'Post name is required.',
+        'forms.*.name.string'        => 'Post name must be text.',
+        'forms.*.name.max'           => 'Post name cannot exceed 255 characters.',
+
+        'forms.*.description.required_with' => 'Post description is required.',
+        'forms.*.description.string'        => 'Post description must be text.',
+        'forms.*.description.max'           => 'Post description cannot exceed 255 characters.',
+
+        'forms.*.tags.array'         => 'Post tags must be an array.',
+        'forms.*.tags.required_with' => 'Post tags are required.',
+
+        'forms.required' => 'The Post field is required.',
+        'forms.*.name.required' => 'Post name is required.',
+        'forms.*.description.required' => 'Post description is required.',
+        'forms.*.tags.required' => 'Post tags are required.',
+        'id.required' => 'The social media ID is required.',
+        'id.exists' => 'The selected social media ID is invalid.',
+
+        'posts.*.id.required_with' => 'Post ID is required.',
+        'posts.*.id.exists' => 'Selected post ID is invalid.',
+
+        'posts.*.name.required_with' => 'Post name is required.',
+        'posts.*.name.string' => 'Post name must be a string.',
+        'posts.*.name.max' => 'Post name must not exceed 255 characters.',
+
+        'posts.*.description.required_with' => 'Post description is required.',
+        'posts.*.description.string' => 'Post description must be a string.',
+        'posts.*.description.max' => 'Post description must not exceed 255 characters.',
+
+        'posts.*.tags.required_with' => 'At least one post tag is required for each post.',
+        'posts.*.tags.array' => 'Post tags must be an array.',
+
+        'name' => [
+            'required' => 'Name is required.',
+            'string'   => 'Name must be a string.',
+            'max'      => 'Name may not be greater than 30 characters.',
+        ],
+        'email' => [
+            'required' => 'Email is required.',
+            'string'   => 'Email must be a string.',
+            'email'    => 'Email must be a valid email address.',
+            'max'      => 'Email may not be greater than 200 characters.',
+            'unique'   => 'This email is already taken.',
+        ],
+        'password' => [
+            'required'  => 'Password is required.',
+            'string'    => 'Password must be a string.',
+            'confirmed' => 'Passwords do not match.',
+            'min'       => 'Password must be at least 8 characters.',
+        ],
+        'user_role' => [
+            'required' => 'User role is required.',
+            'nullable' => 'User role can be null.',
+            'string'   => 'User role must be a string.',
+            'exists'   => 'The selected role does not exist.',
         ],
     ],
 

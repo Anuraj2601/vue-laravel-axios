@@ -34,10 +34,12 @@ class UserPostsUpdateRequest extends FormRequest
             'posts.*.name' => 'required_with:posts|string|max:255',
             'posts.*.description' => 'required_with:posts|string|max:255',
             'posts.*.tags' => 'array|nullable|required_with:posts',
+            'deletedPostIds' => 'sometimes|array',
+            'deletedPostIds.*' => 'integer|exists:posts,id',
         ];
     }
 
-    public function messages() {
+    /* public function messages() {
         return [
             'id.required' => 'The social media ID is required.',
             'id.exists' => 'Selected social media ID is invalid.',
@@ -62,5 +64,5 @@ class UserPostsUpdateRequest extends FormRequest
             'posts.*.tags.required_with' => 'At least one post tag is required',
             'posts.*.tags.array' => 'Post tags must be an array.',
         ];
-    }
+    } */
 }

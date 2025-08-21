@@ -9,7 +9,7 @@
                 modal-id="feedbackModal"
             />
 
-            <div class="title flex justify-between items-center" v-if="hasRole('superadmin')">
+            <div class="title flex justify-between items-center" v-if="hasPermission('create_user')">
                 <button 
                     class="bg-gray-200 text-black mr-32 px-2 py-2 rounded-lg focus:outline-none hover:bg-gray-800 hover:text-gray-100 focus:ring-2 focus:ring-black-500 flex items-center space-x-2"
                     @click="addUser()"
@@ -19,6 +19,28 @@
                     </svg>
                         {{ $t('users_s.add') }}
                 </button>
+                <div class="space-x-2">
+                    <select 
+                        v-model="perPage" 
+                        @change="fetchUsers(1)"
+                        class="mt-2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option v-for="n in [5, 6, 7, 8]" :key="n" :value="n">
+                            {{ n }} rows
+                        </option>
+                    </select>
+                        <input 
+                        v-model="searchQuery" 
+                        @input="fetchUsers(1)" 
+                        type="text" 
+                        class="mt-2 w-65 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                        :placeholder="$t('placeholders.search_users')"
+                        />
+                    </div>
+            </div>
+
+            <div v-if="permissionError" class="text-red-600 text-sm ml-6 my-2">
+                {{ permissionError }}
             </div>
         
             <!-- <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ml-20 mr-20">
@@ -73,12 +95,12 @@
                 </div>
                 </div> -->
                 <div class="overflow-x-auto ml-6 mr-10">
-                    <div class="list-container">
+                    <div class="list-container" v-if="!loading">
                         <div class="flex items-center text-left font-semibold text-gray-800 mt-6 px-10">
                             <span class="flex-1 text-sm">{{ $t('users_s.name') }}</span>
                             <span class="flex-1 text-sm">{{ $t('users_s.email') }}</span>
                             <span class="flex-1 text-sm">{{ $t('users_s.roles') }}</span>
-                            <span class="w-auto text-sm">{{ $t('users_s.actions') }}</span>
+                            <span class="w-auto text-sm" v-if="hasPermission('edit_user') || hasPermission('delete_user')">{{ $t('users_s.actions') }}</span>
                         </div>
 
                         <ul class="w-full bg-white p-4 space-y-2 rounded-lg mt-2">
@@ -102,6 +124,7 @@
 
                             <div class="flex space-x-2">
                             <button
+                                v-if="hasPermission('edit_user')"
                                 @click.stop="editUser(user.id)"
                                 class="bg-yellow-500 text-white px-3 py-1 rounded-md hover:bg-yellow-400 text-sm flex items-center"
                             >
@@ -115,6 +138,7 @@
                             </button>
 
                             <button
+                                v-if="hasPermission('delete_user')"
                                 @click.stop="confirmDelete(user.id)"
                                 class="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-400 text-sm flex items-center"
                             >
@@ -127,6 +151,14 @@
                            <!--  </div> -->
                         </li>
                         </ul>
+                    </div>
+                    <div v-else class="items-center p-4">
+                        <button type="button" class="flex" disabled>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 animate-spin">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                            </svg>
+                        <div class="text-base">Processing....</div>
+                        </button>
                     </div>
                 </div>
 
@@ -235,6 +267,8 @@ import EditDrawer from "./EditDrawer.vue";
 import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from "@headlessui/vue";
 import Edit from "./edit.vue";
 import { useStore } from "vuex";
+import i18n from "../../i18n";
+
 
 const users = ref([]);
 const router = useRouter();
@@ -248,9 +282,11 @@ const modalMessage = ref('');
 const modalRef = ref(null);
 const showEdit = ref(false);
 const currentPage = ref(1);
-/* const searchQuery = ref(''); */
+const searchQuery = ref('');
 const totalPages = ref(1);
 const totalUsers = ref(0);
+const permissionError  = ref('');
+const perPage = ref(7);
 
 const showModal = (title, message) => {
   modalTitle.value = title;
@@ -268,7 +304,6 @@ const store = useStore();
 
 const hasRole = (role) => store.getters['auth/hasRole'](role);
 const hasPermission = (permission) => store.getters['auth/hasPermission'](permission);
-
 
 function editUser(id) {
     selectedUserId.value = id;
@@ -295,15 +330,21 @@ function confirmDelete(id) {
 const fetchUsers = async () => {
     loading.value = true;
     try {
-        const response = await axiosInstance.get(`/api?page=${currentPage.value}`);
+        const response = await axios.get(`/api?page=${currentPage.value}&search=${searchQuery.value}&per_page=${perPage.value}`, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Accept-Language": i18n.global.locale.value
+            }
+        });
         users.value = response.data.Users; 
         totalUsers.value = response.data.total;
         totalPages.value = response.data.last_page;
         loading.value = false;
     } catch (response) {
-        if(response.status == '403') {
-            showModal('Error','You do not have permission to access this resource');
-            router.push('/dashboard');
+        if(error.response) {
+            if (error.response.status === 403) {
+                permissionError.value = error.response.data.message;
+            }
         }
         console.error('Fetching user details error', response);
     }
@@ -326,11 +367,18 @@ const changePage = (page) => {
 } */
 
 
-const deleteUser = async (userId) => {
+const deleteUser = async () => {
     try {
         showWarning.value = false;
-        const response = await axiosInstance.delete(`/api/delete/${userId}`);
-
+        loading.value = true;
+        const response = await axios.delete(`/api/delete/${userToDelete.value}`, {
+            headers: {
+                "Authorization" : `Bearer ${token}`,
+                "Accept-Language": i18n.global.locale.value
+            }
+        });
+        loading.value = false;
+        console.log(response.data);
         if(response.data.status == 'success') {
             fetchUsers();
         }
@@ -364,10 +412,10 @@ onMounted(fetchUsers);
 
 .title {
     display: flex;
-    justify-content:space-between;
+    /* justify-content:space-between; */
     margin-top: 20px;
     margin-left: 40px;
-    margin-right: 120px;
+    margin-right: 60px;
     text-align: left;
     font-size: small;
 }

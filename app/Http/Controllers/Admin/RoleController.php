@@ -16,13 +16,35 @@ class RoleController extends Controller
      * Show all roles
      * @return \Illuminate\Http\JsonResponse
      */
-    public function index() {
+    public function index(Request $request) {
         try {
-            $roles = Role::with('permissions')->get();
+            $perPage = $request->input('per_page', 7);
+            $query = $rolesPaginator = Role::with('permissions')
+                        ->orderBy('id','desc');
+
+            if($request->has('search') && $request->search != '') {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%$search%")
+                    ->orWhereHas('permissions', function ($q2) use ($search) {
+                            $q2->where('name', 'like', "%$search%");
+                        });
+                });
+            }
+                        
+            $rolesPaginator = $query->paginate($perPage)->withQueryString();
+
+            if ($rolesPaginator->currentPage() > $rolesPaginator->lastPage() && $rolesPaginator->lastPage() > 0) {
+                $request->merge(['page' => $rolesPaginator->lastPage()]);
+                $rolesPaginator = $query->paginate($perPage)->withQueryString();
+            }
 
             return response()->json([
                 'status' => 'success',
-                'roles'  => $roles,
+                'roles'  => $rolesPaginator->items(),
+                'total'        => $rolesPaginator->total(),
+                'current_page' => $rolesPaginator->currentPage(),
+                'last_page'    => $rolesPaginator->lastPage(),
                 'permissions'=> Permission::all()
             ]);
         } catch (\Throwable $th) {
@@ -31,6 +53,38 @@ class RoleController extends Controller
                 'error'  => $th->getMessage()
             ]);
         }
+    }
+
+    /**
+     * 
+     * @return void
+     */
+    public function getUserRolesforCreate(Request $request) {
+        try {
+            $authUser = auth()->user();
+
+            $query = Role::with('permissions')->orderBy('id','desc');
+
+            // Filter roles based on logged-in user's role
+            if ($authUser->hasRole('admin')) {
+                // Admin can only see 'user' role
+                $query->where('name', 'user');
+            } elseif ($authUser->hasRole('superadmin')) {
+                // Superadmin can see 'user' and 'admin' roles
+                $query->whereIn('name', ['user', 'admin']);
+            } else {
+                // Normal users cannot see any roles
+                $query->whereRaw('0 = 1'); // empty result
+            }
+
+            $roles = $query->get();
+
+            return response()->json($roles);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+
     }
 
     /**
@@ -45,7 +99,9 @@ class RoleController extends Controller
             return response()->json([
                 'msg' => 'success',
                 'roles' => $role,
-                'permissions'=> $role_permissions
+                'permission'=> $role_permissions,
+                'permissions' => Permission::all()
+
             ]);
         } catch (\Throwable $th) {
             return response()->json([

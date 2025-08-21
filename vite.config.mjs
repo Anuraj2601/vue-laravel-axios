@@ -8,6 +8,7 @@ export default defineConfig({
     css: {
             devSourcemap: true,
         },
+    base:  '/',
     plugins: [
         vue(),
         tailwindcss(),
@@ -17,7 +18,7 @@ export default defineConfig({
         }),
     ],
     server: {
-    /* host: '192.168.1.20', */
+    host: '192.168.1.23',
     port: 5173,
     cors: true,
     watch: {

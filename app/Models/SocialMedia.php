@@ -15,10 +15,15 @@ class SocialMedia extends Model
         'platform',
         'url',
         'location',
-        'date'
+        'date',
+        'user_id',
     ];
 
     public function posts() {
        return $this->hasMany(Post::class, 'social_media_id');
+    }
+
+    public function user() {
+        return $this->belongsTo(User::class);
     }
 }
