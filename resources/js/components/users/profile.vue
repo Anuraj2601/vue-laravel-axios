@@ -308,7 +308,7 @@ const updateProfileInfo = async () => {
     if (selectedFile.value) {
         formData.append('image', selectedFile.value);
     } else {
-        formData.append('image', '');
+        formData.append('image', image.value);
     }
 
     console.log(formData);

@@ -132,34 +132,6 @@
             </div>
           </div>
 
-          <!-- <div class="mb-4">
-            <label for="social_media" class="block text-lg font-medium text-gray-700 text-left">Social Media<span class="text-red-400 text-base font-medium">*</span></label>
-            <Multiselect
-              v-model="post.social_media"
-              :options="socialMedia"
-              :multiple="true"
-              :close-on-select="true"
-              :clear-on-select="false"
-              :preserve-search="true"
-              label="platform"
-              track-by="id"
-              class="mt-2"
-            >
-              <template #tag="{ option, remove }">
-                <span class="bg-green-100 text-green-800 px-2.5 py-0.5 rounded-full mr-2">
-                  {{ option.platform }}
-                  <span class="ml-2 text-red-500 cursor-pointer" @click="remove(option)">❌</span>
-                </span>
-              </template>
-              <template #clear="props">
-                <div class="multiselect__clear" v-if="post.social_media.length" @mousedown.prevent.stop="clearAll(props.search)"></div>
-              </template>
-            </Multiselect>
-            <div v-if="errors['social_media']" class="text-red-500 text-sm mt-2">
-              {{ errors['social_media'] }}
-            </div>
-          </div> -->
-
           
         </div>
         <div v-else class="items-center p-4">
@@ -183,15 +155,15 @@
       <div class="mb-2" v-if="hasPermission('create_post')">
             <div :class="[props.showEdit ? border_n : border_t, border_u]">
                 <h2 class="text-2xl mt-2 font-semibold">{{ $t('post_add.title') }}</h2>
-                    <!-- <button type="button" @click="addForm" class="btn btn-primary mb-4 px-2 py-2 mt-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none text-sm">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                      </svg>
-                    </button> -->
             </div>
 
                 <!-- Add Posts Form -->
-          <Add :forms="forms" :errorsF="formErrors" :errors="errorsAdd"  @remove="removeForm" :disableRemove="showMyPostAdd"   />
+          <Add :forms="forms"
+          ref="childRef"
+      :errorsF="formErrors"
+      @update:forms="updateForms"
+      @remove="handleRemoveForm"
+      @close="showForm = false"    />
             <div class="flex justify-end">
               <button type="button" @click="addForm" class="btn btn-primary mb-4 px-2 py-2 mt-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none text-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -200,15 +172,6 @@
               </button>
             </div>
         </div>
-        <!-- <div v-if="props.showUserEdit">
-            <button 
-            type="button" 
-            @click="submitUserEditForm"
-            class="w-full py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm"
-            >
-            {{$t('post_edit.buttons.submit')}}
-          </button>
-         </div> -->
         <div v-if="!props.showEdit && !props.showMyPostAdd && !props.showUserEdit" class="mt-4">
             <button 
             type="button" 
@@ -315,7 +278,7 @@ const today = computed(() => {
 });
 
 const forms = ref([
-  /* { name: '', description: '', tags: [] } */
+  { name: '', description: '', tags: [] }
 ]);
 
 const formsSoc = ref([
@@ -340,89 +303,28 @@ const formsSoc1 = ref({
     date: ''
 });
 
-/* function addForm() {
-  open.value= true;
-    forms.value.push({
-        name: '',
-        description: '',
-        tags: [],
-    })
-} */
+const postForms = ref([
+  { name: '', description: '', tags: [] } // initial empty form
+]);
 
-const addForm = () => {
-  const lastIndex = forms.value.length - 1;
-  const lastForm = forms.value[lastIndex]?.value;
+const showForm = ref(true); // toggle form visibility
 
-  // Initialize errors for this form if not exists
-  if (!errorsAdd.value[lastIndex]) errorsAdd.value[lastIndex] = {};
-
-  // If no forms exist, just add the first one
-  if (!lastForm) {
-    forms.value.push({ name: '', description: '', tags: [] });
-    errorsAdd.value.push({});
-    return;
-  }
-
-  // Validate only the last form
-  let hasError = false;
-
-  if (!lastForm.name || lastForm.name.trim() === '') {
-    errorsAdd.value[lastIndex].name = t('post_add.errors.name');
-    hasError = true;
-  } else {
-    errorsAdd.value[lastIndex].name = '';
-  }
-
-  if (!lastForm.description || lastForm.description.trim() === '') {
-    errorsAdd.value[lastIndex].description = t('post_add.errors.description');
-    hasError = true;
-  } else {
-    errorsAdd.value[lastIndex].description = '';
-  }
-
-  if (!lastForm.tags || lastForm.tags.length === 0) {
-    errorsAdd.value[lastIndex].tags = t('post_add.errors.tags');
-    hasError = true;
-  } else {
-    errorsAdd.value[lastIndex].tags = '';
-  }
-
-  // Stop if there are errors
-  if (hasError) return;
-
-  // Push new empty form and empty error object
-  forms.value.push({ name: '', description: '', tags: [] });
-  errorsAdd.value.push({});
+// Called when child emits update:forms
+const updateForms = (updatedForms) => {
+  forms.value = updatedForms;
 };
 
+// Called when child emits remove
+const handleRemoveForm = (index) => {
+  forms.value.splice(index, 1);
+  formErrors.value.splice(index, 1); // also remove corresponding backend errors
+};
+const addForm = () => {
+  childRef.value?.addForm(); // calls addForm in child
+};
 
+// Add a new form row
 
-watch(
-  forms,
-  (newForms) => {
-    newForms.forEach((form, index) => {
-      const errors = errorsAdd.value[index] || {};
-      let hasChange = false;
-
-      // Check each field and clear error if user typed something valid
-      if (errors.name && form.name && form.name.trim() !== '') {
-        delete errors.name;
-        hasChange = true;
-      }
-      if (errors.description && form.description && form.description.trim() !== '') {
-        delete errors.description;
-        hasChange = true;
-      }
-      if (errors.tags && form.tags && form.tags.length > 0) {
-        delete errors.tags;
-        hasChange = true;
-      }
-
-      if (hasChange) errorsAdd.value[index] = { ...errors };
-    });
-  },
-  { deep: true }
-);
 
 function confirmDelete(post) {
   postToDelete.value = post;
@@ -448,6 +350,11 @@ const modalTitle = ref('');
 const modalMessage = ref('');
 const modalRef = ref(null);
 
+
+// Function to call child’s addForm
+const handleAddForm = () => {
+  childRef.value.addForm();
+};
 
 
 const showModal = (title, message) => {
@@ -510,16 +417,6 @@ const props = defineProps({
       required: true,
     }
 });
-
-/* const socialSchema = yup.object({
-    platform: yup.string().required(t('social_add.name_required')),
-    location: yup.string().required(t('social_add.location_required')),
-    date: yup.date().required(t('social_add.date_required')),
-}); */
-
-/* const formsSoc = useForm({
-  validationSchema: socialSchema,
-}); */
 
 
 const formErrors2 = ref({
@@ -937,31 +834,6 @@ const submitUpdateMyPost = async() => {
         }
     }
 }
-
-    /* try {
-        const postsData = posts.value.map(post=> ({
-            id: post.id,
-            name: post.name,
-            description: post.description,
-            tags: post.tags.map(tag=> tag.id),
-        }));
-        console.log(postsData);
-        const response = await axios.post('api/posts/update-all', {posts: postsData}, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-
-        if(response.data.status == 'success') {
-            cancel();
-            emit('updated');
-        }
-    } catch (error) {
-       if (error.response && error.response.status === 422) {
-            erroru.value = formatValidationErrors(error.response.data.error);
-        }
-    }
-}; */
 
 
 
